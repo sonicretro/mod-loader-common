@@ -741,7 +741,7 @@ appendchar:
 			}
 			else
 			{
-				key = line;
+				key = sb;
 			}
 
 			// Store the value in the current group.
