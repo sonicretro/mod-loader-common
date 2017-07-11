@@ -62,9 +62,11 @@ class IniGroup
 class IniFile
 {
 	public:
-		IniFile(const std::string &filename);
-		IniFile(const std::wstring &filename);
-		IniFile(FILE *f);
+		explicit IniFile(const std::string &filename);
+		explicit IniFile(const std::wstring &filename);
+		explicit IniFile(const char *filename);
+		explicit IniFile(const wchar_t *filename);
+		explicit IniFile(FILE *f);
 		~IniFile();
 
 		IniGroup *getGroup(const std::string &section);
