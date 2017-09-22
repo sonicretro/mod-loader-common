@@ -261,7 +261,6 @@ IniFile::IniFile(const string &filename)
 	FILE *f = fopen(filename.c_str(), "r");
 	if (!f)
 		return;
-
 	load(f);
 	fclose(f);
 }
@@ -271,7 +270,24 @@ IniFile::IniFile(const wstring &filename)
 	FILE *f = _wfopen(filename.c_str(), L"r");
 	if (!f)
 		return;
+	load(f);
+	fclose(f);
+}
 
+IniFile::IniFile(const char *filename)
+{
+	FILE *f = fopen(filename, "r");
+	if (!f)
+		return;
+	load(f);
+	fclose(f);
+}
+
+IniFile::IniFile(const wchar_t *filename)
+{
+	FILE *f = _wfopen(filename, L"r");
+	if (!f)
+		return;
 	load(f);
 	fclose(f);
 }
