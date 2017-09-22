@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>de1f0b2d-8634-47b7-9e50-ede78ef59200</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>ModManagerCommon</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Codes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\ModUpdateDetails.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\ModUpdateDetails.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Forms\DownloadDialog.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Forms\ManifestDialog.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Forms\ManifestDiffDialog.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Forms\ManifestDiffDialog.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Forms\ModUpdatesDialog.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Forms\ModUpdatesDialog.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Forms\ProgressDialog.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Forms\ProgressDialog.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Forms\UpdateMessageDialog.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Forms\UpdateMessageDialog.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Forms\VerifyModDialog.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GitHub.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IniFile.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IniSerializer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LoaderInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ModDownload.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ModInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ModManifest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NativeMethods.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SizeSuffix.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UpdateHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UpdaterWebClient.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Controls\ModUpdateDetails.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Forms\ManifestDiffDialog.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Forms\ModUpdatesDialog.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Forms\ProgressDialog.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Forms\UpdateMessageDialog.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>
