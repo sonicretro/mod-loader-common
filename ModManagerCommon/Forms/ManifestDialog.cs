@@ -7,14 +7,14 @@ using System.Windows.Forms;
 
 namespace ModManagerCommon.Forms
 {
-	class ManifestDialog : ProgressDialog
+	public class ManifestDialog : ProgressDialog
 	{
-		private string modPath;
-		private string manifestPath;
+		private readonly string modPath;
+		private readonly string manifestPath;
 		private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-		public List<ModManifest> manifest;
-		public List<ModManifestDiff> diff;
+		private List<ModManifest> manifest;
+		public List<ModManifestDiff> Diff { get; private set; }
 
 		public ManifestDialog(string path, string title, bool allowCancel) : base(title, allowCancel)
 		{
@@ -59,7 +59,7 @@ namespace ModManagerCommon.Forms
 
 				if (!token.IsCancellationRequested)
 				{
-					diff = ModManifestGenerator.Diff(manifest, File.Exists(manifestPath) ? ModManifest.FromFile(manifestPath) : null);
+					Diff = ModManifestGenerator.Diff(manifest, File.Exists(manifestPath) ? ModManifest.FromFile(manifestPath) : null);
 				}
 			}))
 			{

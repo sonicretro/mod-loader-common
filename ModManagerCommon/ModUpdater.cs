@@ -1,23 +1,25 @@
+using IniFile;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using IniFile;
-using Newtonsoft.Json;
+using System.Threading;
 
 namespace ModManagerCommon
 {
-	public static class UpdateHelper
+	public class ModUpdater
 	{
-		public static bool ForceUpdate;
+		private readonly Dictionary<string, List<GitHubRelease>> gitHubCache = new Dictionary<string, List<GitHubRelease>>();
+		public bool ForceUpdate;
 
-		public static ModDownload GetGitHubReleases(ModInfo mod, string folder, 
-			UpdaterWebClient client, Dictionary<string, List<GitHubRelease>> cache, List<string> errors)
+		public ModDownload GetGitHubReleases(ModInfo mod, string folder,
+			UpdaterWebClient client, List<string> errors)
 		{
 			List<GitHubRelease> releases;
 			var url = "https://api.github.com/repos/" + mod.GitHubRepo + "/releases";
-			if (!cache.ContainsKey(url))
+			if (!gitHubCache.ContainsKey(url))
 			{
 				try
 				{
@@ -28,7 +30,7 @@ namespace ModManagerCommon
 
 					if (releases.Count > 0)
 					{
-						cache[url] = releases;
+						gitHubCache[url] = releases;
 					}
 				}
 				catch (Exception ex)
@@ -39,7 +41,7 @@ namespace ModManagerCommon
 			}
 			else
 			{
-				releases = cache[url];
+				releases = gitHubCache[url];
 			}
 
 			// No releases available.
@@ -118,11 +120,11 @@ namespace ModManagerCommon
 			};
 		}
 
-		public static ModDownload CheckModularVersion(ModInfo mod, string folder, List<ModManifest> localManifest,
+		public ModDownload CheckModularVersion(ModInfo mod, string folder, List<ModManifest> localManifest,
 			UpdaterWebClient client, List<string> errors)
 		{
 			if (!mod.UpdateUrl.StartsWith("http://", StringComparison.InvariantCulture)
-			    && !mod.UpdateUrl.StartsWith("https://", StringComparison.InvariantCulture))
+				&& !mod.UpdateUrl.StartsWith("https://", StringComparison.InvariantCulture))
 			{
 				mod.UpdateUrl = "http://" + mod.UpdateUrl;
 			}
@@ -216,6 +218,79 @@ namespace ModManagerCommon
 			}
 
 			return new ModDownload(mod, Path.Combine("mods", folder), mod.UpdateUrl, changes, diff);
+		}
+
+		// TODO: cancel0
+		/// <summary>
+		/// Get mod update metadata for the provided mods.
+		/// </summary>
+		/// <param name="updatableMods">Key-value pairs of mods to be checked, where the key is the mod path and the value is the mod metadata.</param>
+		/// <param name="updates">Output list of mods with available updates.</param>
+		/// <param name="errors">Output list of errors encountered during the update process.</param>
+		public void GetModUpdates(List<KeyValuePair<string, ModInfo>> updatableMods,
+			out List<ModDownload> updates, out List<string> errors, CancellationToken cancellationToken)
+		{
+			updates = new List<ModDownload>();
+			errors = new List<string>();
+
+			if (updatableMods == null || updatableMods.Count == 0)
+			{
+				return;
+			}
+
+			using (var client = new UpdaterWebClient())
+			{
+				foreach (KeyValuePair<string, ModInfo> info in updatableMods)
+				{
+					ModInfo mod = info.Value;
+					if (!string.IsNullOrEmpty(mod.GitHubRepo))
+					{
+						if (string.IsNullOrEmpty(mod.GitHubAsset))
+						{
+							errors.Add($"[{mod.Name}] GitHubRepo specified, but GitHubAsset is missing.");
+							continue;
+						}
+
+						ModDownload d = GetGitHubReleases(mod, info.Key, client, errors);
+						if (d != null)
+						{
+							updates.Add(d);
+						}
+					}
+					else if (!string.IsNullOrEmpty(mod.UpdateUrl))
+					{
+						List<ModManifest> localManifest = null;
+						var manPath = Path.Combine("mods", info.Key, "mod.manifest");
+
+						if (!ForceUpdate && File.Exists(manPath))
+						{
+							try
+							{
+								localManifest = ModManifest.FromFile(manPath);
+							}
+							catch (Exception ex)
+							{
+								errors.Add($"[{mod.Name}] Error parsing local manifest: {ex.Message}");
+								continue;
+							}
+						}
+
+						ModDownload d = CheckModularVersion(mod, info.Key, localManifest, client, errors);
+						if (d != null)
+						{
+							updates.Add(d);
+						}
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Clears update metadata cache.
+		/// </summary>
+		public void Clear()
+		{
+			gitHubCache.Clear();
 		}
 	}
 }

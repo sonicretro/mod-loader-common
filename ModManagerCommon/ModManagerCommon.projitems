@@ -30,9 +30,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)ModDownload.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ModManifest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ModUpdater.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NativeMethods.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SizeSuffix.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)UpdateHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UpdaterWebClient.cs" />
   </ItemGroup>
   <ItemGroup>

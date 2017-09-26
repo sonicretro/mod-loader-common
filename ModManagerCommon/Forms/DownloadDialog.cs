@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace ModManagerCommon.Forms
 {
-	class DownloadDialog : ProgressDialog
+	public class DownloadDialog : ProgressDialog
 	{
 		private readonly List<ModDownload> updates;
 		private readonly string updatePath;

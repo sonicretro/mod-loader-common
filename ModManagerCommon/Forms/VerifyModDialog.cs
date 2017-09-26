@@ -8,12 +8,12 @@ using System.Windows.Forms;
 
 namespace ModManagerCommon.Forms
 {
-	class VerifyModDialog : ProgressDialog
+	public class VerifyModDialog : ProgressDialog
 	{
-		private List<Tuple<string, ModInfo>> mods;
+		private readonly List<Tuple<string, ModInfo>> mods;
 		private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-		public List<Tuple<string, ModInfo, List<ModManifestDiff>>> Failed { get; private set; }
+		public List<Tuple<string, ModInfo, List<ModManifestDiff>>> Failed { get; }
 
 		public VerifyModDialog(List<Tuple<string, ModInfo>> mods)
 			: base("Verifying...", true)
