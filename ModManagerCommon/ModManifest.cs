@@ -288,8 +288,19 @@ namespace ModManagerCommon
 		public static string GetFileHash(string f)
 		{
 			byte[] hash;
+			SHA256 sha;
 
-			using (var sha = new SHA256Cng())
+			// This is a work around for Windows XP.
+			try
+			{
+				sha = new SHA256Cng();
+			}
+			catch (PlatformNotSupportedException)
+			{
+				sha = SHA256.Create();
+			}
+
+			using (sha)
 			{
 				using (FileStream stream = File.OpenRead(f))
 				{
