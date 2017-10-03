@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using SharpCompress.Archives.SevenZip;
-using SharpCompress.Readers;
 
 namespace ModManagerCommon
 {
@@ -20,10 +19,10 @@ namespace ModManagerCommon
 	{
 		private readonly DownloadProgressChangedEventArgs args;
 
-		public int    ProgressPercentage  => args.ProgressPercentage;
-		public object UserState           => args.UserState;
-		public long   BytesReceived       => args.BytesReceived;
-		public long   TotalBytesToReceive => args.TotalBytesToReceive;
+		public int ProgressPercentage => args.ProgressPercentage;
+		public object UserState => args.UserState;
+		public long BytesReceived => args.BytesReceived;
+		public long TotalBytesToReceive => args.TotalBytesToReceive;
 
 		public int FileDownloading { get; }
 		public int FilesToDownload { get; }
@@ -48,11 +47,11 @@ namespace ModManagerCommon
 		public int FilesToDownload { get; }
 		public List<ModManifestDiff> ChangedFiles { get; }
 
-		public string HomePage   = string.Empty;
-		public string Name       = string.Empty;
-		public string Version    = string.Empty;
-		public string Published  = string.Empty;
-		public string Updated    = string.Empty;
+		public string HomePage = string.Empty;
+		public string Name = string.Empty;
+		public string Version = string.Empty;
+		public string Published = string.Empty;
+		public string Updated = string.Empty;
 		public string ReleaseUrl = string.Empty;
 
 		public event CancelEventHandler DownloadStarted;
@@ -73,12 +72,12 @@ namespace ModManagerCommon
 		/// <seealso cref="ModDownloadType"/>
 		public ModDownload(ModInfo info, string folder, string url, string changes, long size)
 		{
-			Info            = info;
-			Type            = ModDownloadType.Archive;
-			Url             = url;
-			Folder          = folder;
-			Changes         = changes;
-			Size            = size;
+			Info = info;
+			Type = ModDownloadType.Archive;
+			Url = url;
+			Folder = folder;
+			Changes = changes;
+			Size = size;
 			FilesToDownload = 1;
 		}
 
@@ -93,10 +92,10 @@ namespace ModManagerCommon
 		/// <seealso cref="ModDownloadType"/>
 		public ModDownload(ModInfo info, string folder, string url, string changes, List<ModManifestDiff> diff)
 		{
-			Info         = info;
-			Type         = ModDownloadType.Modular;
-			Url          = url;
-			Folder       = folder;
+			Info = info;
+			Type = ModDownloadType.Modular;
+			Url = url;
+			Folder = folder;
 			ChangedFiles = diff?.Where(x => x.State != ModManifestState.Unchanged).ToList()
 				?? throw new ArgumentNullException(nameof(diff));
 
@@ -108,27 +107,6 @@ namespace ModManagerCommon
 			Size = Math.Max(toDownload.Select(x => x.Current.FileSize).Sum(), toDownload.Count);
 
 			Changes = !string.IsNullOrEmpty(changes) ? changes : string.Empty;
-		}
-
-		private static void Extract(IReader reader, string outDir)
-		{
-			var options = new ExtractionOptions
-			{
-				ExtractFullPath    = true,
-				Overwrite          = true,
-				PreserveAttributes = true,
-				PreserveFileTime   = true
-			};
-
-			while (reader.MoveToNextEntry())
-			{
-				if (reader.Entry.IsDirectory)
-				{
-					continue;
-				}
-
-				reader.WriteEntryToDirectory(outDir, options);
-			}
 		}
 
 		public void Download(WebClient client, string updatePath)
@@ -213,23 +191,7 @@ namespace ModManagerCommon
 							return;
 						}
 
-						using (Stream fileStream = File.OpenRead(filePath))
-						{
-							if (SevenZipArchive.IsSevenZipFile(fileStream))
-							{
-								using (SevenZipArchive archive = SevenZipArchive.Open(fileStream))
-								{
-									Extract(archive.ExtractAllEntries(), dataDir);
-								}
-							}
-							else
-							{
-								using (IReader reader = ReaderFactory.Open(fileStream))
-								{
-									Extract(reader, dataDir);
-								}
-							}
-						}
+						Process.Start("7z.exe", $"x -o\"{dataDir}\" \"{filePath}\"").WaitForExit();
 
 						string workDir = Path.GetDirectoryName(ModInfo.GetModFiles(new DirectoryInfo(dataDir)).FirstOrDefault());
 
@@ -248,7 +210,11 @@ namespace ModManagerCommon
 
 						if (!File.Exists(newManPath))
 						{
-							throw new FileNotFoundException("This mod is missing a manifest!");
+							CopyDirectory(new DirectoryInfo(workDir), Directory.CreateDirectory(Folder));
+							Directory.Delete(dataDir, true);
+							if (File.Exists(filePath))
+								File.Delete(filePath);
+							return;
 						}
 
 						if (OnParsingManifest(cancelArgs))
@@ -350,7 +316,7 @@ namespace ModManagerCommon
 							++fileDownloading;
 
 							if (!info.Exists || info.Length != i.Current.FileSize
-							    || !i.Current.Checksum.Equals(ModManifestGenerator.GetFileHash(filePath), StringComparison.InvariantCultureIgnoreCase))
+								|| !i.Current.Checksum.Equals(ModManifestGenerator.GetFileHash(filePath), StringComparison.InvariantCultureIgnoreCase))
 							{
 								client.DownloadFileCompleted += DownloadComplete;
 								client.DownloadProgressChanged += DownloadProgressChanged;
@@ -485,6 +451,14 @@ namespace ModManagerCommon
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
+		}
+
+		private void CopyDirectory(DirectoryInfo oldDir, DirectoryInfo newDir)
+		{
+			foreach (DirectoryInfo dir in oldDir.EnumerateDirectories())
+				CopyDirectory(dir, newDir.CreateSubdirectory(dir.Name));
+			foreach (FileInfo file in oldDir.EnumerateFiles())
+				file.CopyTo(Path.Combine(newDir.FullName, file.Name), true);
 		}
 
 		private void RemoveEmptyDirectories(IEnumerable<ModManifest> oldManifest, IEnumerable<ModManifest> newManifest)
