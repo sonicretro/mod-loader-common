@@ -139,7 +139,7 @@ namespace ModManagerCommon
 					{
 						HttpWebRequest req = WebRequest.CreateHttp(Url);
 						HttpWebResponse res = (HttpWebResponse)req.GetResponse();
-						var uri = new Uri(res.ResponseUri);
+						var uri = res.ResponseUri;
 						res.Close();
 						string filePath = Path.Combine(updatePath, uri.Segments.Last());
 
