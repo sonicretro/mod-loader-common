@@ -137,7 +137,10 @@ namespace ModManagerCommon
 			{
 				case ModDownloadType.Archive:
 					{
-						var uri = new Uri(Url);
+						HttpWebRequest req = WebRequest.CreateHttp(Url);
+						HttpWebResponse res = (HttpWebResponse)req.GetResponse();
+						var uri = new Uri(res.ResponseUri);
+						res.Close();
 						string filePath = Path.Combine(updatePath, uri.Segments.Last());
 
 						var info = new FileInfo(filePath);
