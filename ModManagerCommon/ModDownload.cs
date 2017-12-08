@@ -137,7 +137,7 @@ namespace ModManagerCommon
 			{
 				case ModDownloadType.Archive:
 					{
-						HttpWebRequest req = WebRequest.CreateHttp(Url);
+						HttpWebRequest req = (HttpWebRequest)WebRequest.Create(Url);
 						HttpWebResponse res = (HttpWebResponse)req.GetResponse();
 						var uri = res.ResponseUri;
 						res.Close();
