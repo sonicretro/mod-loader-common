@@ -199,7 +199,7 @@ namespace ModManagerCommon
 							return;
 						}
 
-						Process.Start(new ProcessStartInfo("7z.exe", $"x -o\"{dataDir}\" \"{filePath}\"") { UseShellExecute = false, CreateNoWindow = true }).WaitForExit();
+						Process.Start(new ProcessStartInfo("7za.exe", $"x -o\"{dataDir}\" \"{filePath}\"") { UseShellExecute = false, CreateNoWindow = true }).WaitForExit();
 
 						string workDir = Path.GetDirectoryName(ModInfo.GetModFiles(new DirectoryInfo(dataDir)).FirstOrDefault());
 
