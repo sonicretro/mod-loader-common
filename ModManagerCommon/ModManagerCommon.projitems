@@ -16,6 +16,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Forms\ManifestDialog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Forms\ManifestDiffDialog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Forms\ManifestDiffDialog.Designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Forms\ModConfigDialog.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Forms\ModConfigDialog.Designer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Forms\ModUpdatesDialog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Forms\ModUpdatesDialog.Designer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Forms\ProgressDialog.cs" />
@@ -40,6 +42,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
     </EmbeddedResource>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Forms\ManifestDiffDialog.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Forms\ModConfigDialog.resx">
       <Generator>ResXFileCodeGenerator</Generator>
     </EmbeddedResource>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Forms\ModUpdatesDialog.resx">
