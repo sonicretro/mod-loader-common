@@ -278,6 +278,8 @@ namespace ModManagerCommon.Forms
 			}
 		}
 
+		public override string DisplayName { get { return prop.DisplayName ?? prop.Name; } }
+
 		public override string Category { get { return category; } }
 
 		public override string Description { get { return prop.HelpText; } }
