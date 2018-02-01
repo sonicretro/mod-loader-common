@@ -28,17 +28,23 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
 			this.panel1 = new System.Windows.Forms.Panel();
-			this.okButton = new System.Windows.Forms.Button();
+			this.resetButton = new System.Windows.Forms.Button();
 			this.cancelButton = new System.Windows.Forms.Button();
+			this.okButton = new System.Windows.Forms.Button();
 			this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
+			this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.resetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.panel1.SuspendLayout();
+			this.contextMenuStrip1.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// panel1
 			// 
 			this.panel1.AutoSize = true;
 			this.panel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+			this.panel1.Controls.Add(this.resetButton);
 			this.panel1.Controls.Add(this.cancelButton);
 			this.panel1.Controls.Add(this.okButton);
 			this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -46,6 +52,29 @@
 			this.panel1.Name = "panel1";
 			this.panel1.Size = new System.Drawing.Size(384, 29);
 			this.panel1.TabIndex = 1;
+			// 
+			// resetButton
+			// 
+			this.resetButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.resetButton.DialogResult = System.Windows.Forms.DialogResult.OK;
+			this.resetButton.Location = new System.Drawing.Point(135, 3);
+			this.resetButton.Name = "resetButton";
+			this.resetButton.Size = new System.Drawing.Size(75, 23);
+			this.resetButton.TabIndex = 2;
+			this.resetButton.Text = "&Reset";
+			this.resetButton.UseVisualStyleBackColor = true;
+			this.resetButton.Click += new System.EventHandler(this.resetButton_Click);
+			// 
+			// cancelButton
+			// 
+			this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+			this.cancelButton.Location = new System.Drawing.Point(297, 3);
+			this.cancelButton.Name = "cancelButton";
+			this.cancelButton.Size = new System.Drawing.Size(75, 23);
+			this.cancelButton.TabIndex = 1;
+			this.cancelButton.Text = "&Cancel";
+			this.cancelButton.UseVisualStyleBackColor = true;
 			// 
 			// okButton
 			// 
@@ -59,20 +88,10 @@
 			this.okButton.UseVisualStyleBackColor = true;
 			this.okButton.Click += new System.EventHandler(this.okButton_Click);
 			// 
-			// cancelButton
-			// 
-			this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.cancelButton.Location = new System.Drawing.Point(297, 3);
-			this.cancelButton.Name = "cancelButton";
-			this.cancelButton.Size = new System.Drawing.Size(75, 23);
-			this.cancelButton.TabIndex = 1;
-			this.cancelButton.Text = "&Cancel";
-			this.cancelButton.UseVisualStyleBackColor = true;
-			// 
 			// propertyGrid1
 			// 
 			this.propertyGrid1.CommandsVisibleIfAvailable = false;
+			this.propertyGrid1.ContextMenuStrip = this.contextMenuStrip1;
 			this.propertyGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.propertyGrid1.Location = new System.Drawing.Point(0, 0);
 			this.propertyGrid1.Name = "propertyGrid1";
@@ -80,6 +99,21 @@
 			this.propertyGrid1.Size = new System.Drawing.Size(384, 332);
 			this.propertyGrid1.TabIndex = 0;
 			this.propertyGrid1.ToolbarVisible = false;
+			// 
+			// contextMenuStrip1
+			// 
+			this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.resetToolStripMenuItem});
+			this.contextMenuStrip1.Name = "contextMenuStrip1";
+			this.contextMenuStrip1.Size = new System.Drawing.Size(153, 48);
+			this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
+			// 
+			// resetToolStripMenuItem
+			// 
+			this.resetToolStripMenuItem.Name = "resetToolStripMenuItem";
+			this.resetToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.resetToolStripMenuItem.Text = "&Reset";
+			this.resetToolStripMenuItem.Click += new System.EventHandler(this.resetToolStripMenuItem_Click);
 			// 
 			// ModConfigDialog
 			// 
@@ -99,6 +133,7 @@
 			this.Text = "Configure";
 			this.Load += new System.EventHandler(this.ModConfigDialog_Load);
 			this.panel1.ResumeLayout(false);
+			this.contextMenuStrip1.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -110,5 +145,8 @@
 		private System.Windows.Forms.Button cancelButton;
 		private System.Windows.Forms.Button okButton;
 		private System.Windows.Forms.PropertyGrid propertyGrid1;
+		private System.Windows.Forms.Button resetButton;
+		private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+		private System.Windows.Forms.ToolStripMenuItem resetToolStripMenuItem;
 	}
 }

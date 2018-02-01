@@ -33,6 +33,22 @@ namespace ModManagerCommon.Forms
 		{
 			settings.Save();
 		}
+
+		private void resetButton_Click(object sender, EventArgs e)
+		{
+			settings.ResetValues();
+			propertyGrid1.Refresh();
+		}
+
+		private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
+		{
+			resetToolStripMenuItem.Enabled = propertyGrid1.SelectedGridItem.PropertyDescriptor.CanResetValue(settings);
+		}
+
+		private void resetToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			propertyGrid1.ResetSelectedProperty();
+		}
 	}
 
 	class ConfigSettings : ICustomTypeDescriptor
@@ -62,6 +78,13 @@ namespace ModManagerCommon.Forms
 		public void Save()
 		{
 			IniFile.IniFile.Save(config, configfilename);
+		}
+
+		public void ResetValues()
+		{
+			foreach (ConfigSchemaGroup group in schema.Groups)
+				foreach (ConfigSchemaProperty prop in group.Properties)
+					config[group.Name][prop.Name] = prop.DefaultValue;
 		}
 
 		AttributeCollection ICustomTypeDescriptor.GetAttributes() { return AttributeCollection.Empty; }
