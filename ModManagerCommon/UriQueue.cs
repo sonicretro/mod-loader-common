@@ -4,7 +4,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 
-namespace SADXModManager
+namespace ModManagerCommon
 {
 	public class OnUriEnqueuedArgs : EventArgs
 	{
