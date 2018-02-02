@@ -36,6 +36,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)NativeMethods.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SizeSuffix.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UpdaterWebClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UriQueue.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Controls\ModUpdateDetails.resx">
