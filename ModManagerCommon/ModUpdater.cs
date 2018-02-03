@@ -126,7 +126,7 @@ namespace ModManagerCommon
 			GameBananaItem gbi;
 			try
 			{
-				gbi = GameBananaItem.Load(mod.GameBananaItemType, mod.GameBananaItemId);
+				gbi = GameBananaItem.Load(mod.GameBananaItemType, mod.GameBananaItemId.Value);
 			}
 			catch (Exception ex)
 			{
