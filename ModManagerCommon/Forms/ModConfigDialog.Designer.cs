@@ -56,7 +56,6 @@
 			// resetButton
 			// 
 			this.resetButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.resetButton.DialogResult = System.Windows.Forms.DialogResult.OK;
 			this.resetButton.Location = new System.Drawing.Point(135, 3);
 			this.resetButton.Name = "resetButton";
 			this.resetButton.Size = new System.Drawing.Size(75, 23);
