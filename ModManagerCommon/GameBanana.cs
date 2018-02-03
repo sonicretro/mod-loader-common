@@ -22,7 +22,7 @@ namespace ModManagerCommon
 		{
 			string response;
 			using (var client = new UpdaterWebClient())
-				response = client.DownloadString($"https://api.gamebanana.com/Core/Item/Data?itemtype={itemType}&itemid={itemId}&fields=name%2COwner().name%2CUrl().sGetDownloadUrl()%2CUrl().sGetProfileUrl()%2CUpdates().bSubmissionHasUpdates()%2CUpdates().aGetLatestUpdates()&return_keys=1https://api.gamebanana.com/Core/Item/Data?itemtype=Gamefile&itemid=6182&fields=name%2COwner().name%2CUrl().sGetDownloadUrl()%2CUpdates().bSubmissionHasUpdates()%2CUpdates().aGetLatestUpdates()&return_keys=1");
+				response = client.DownloadString($"https://api.gamebanana.com/Core/Item/Data?itemtype={itemType}&itemid={itemId}&fields=name%2COwner().name%2CUrl().sGetDownloadUrl()%2CUrl().sGetProfileUrl()%2CUpdates().bSubmissionHasUpdates()%2CUpdates().aGetLatestUpdates()&return_keys=1");
 			return JsonConvert.DeserializeObject<GameBananaItem>(response);
 		}
     }
