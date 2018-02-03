@@ -75,6 +75,14 @@ namespace ModManagerCommon.Forms
 
 		public void Save()
 		{
+			foreach (ConfigSchemaGroup group in schema.Groups)
+			{
+				foreach (ConfigSchemaProperty prop in group.Properties)
+					if (!prop.AlwaysInclude && config[group.Name][prop.Name] == prop.DefaultValue)
+						config[group.Name].Remove(prop.Name);
+				if (config[group.Name].Count == 0)
+					config.Remove(group.Name);
+			}
 			IniFile.IniFile.Save(config, configfilename);
 		}
 
@@ -410,6 +418,8 @@ namespace ModManagerCommon.Forms
 		public string Type { get; set; }
 		[XmlAttribute("defaultvalue")]
 		public string DefaultValue { get; set; }
+		[XmlAttribute("alwaysinclude")]
+		public bool AlwaysInclude { get; set; }
 		[XmlAttribute("minvalue")]
 		public string MinValue { get; set; }
 		[XmlAttribute("maxvalue")]
