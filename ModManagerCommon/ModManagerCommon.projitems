@@ -25,6 +25,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Forms\UpdateMessageDialog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Forms\UpdateMessageDialog.Designer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Forms\VerifyModDialog.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameBanana.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GitHub.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IniFile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IniSerializer.cs" />

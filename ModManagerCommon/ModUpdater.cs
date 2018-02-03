@@ -120,6 +120,66 @@ namespace ModManagerCommon
 			};
 		}
 
+		public ModDownload GetGameBananaReleases(ModInfo mod, string folder,
+			List<string> errors)
+		{
+			GameBananaItem gbi;
+			try
+			{
+				gbi = GameBananaItem.Load(mod.GameBananaItemType, mod.GameBananaItemId);
+			}
+			catch (Exception ex)
+			{
+				errors.Add($"[{mod.Name}] Error checking for updates: {ex.Message}");
+				return null;
+			}
+
+			// No releases available.
+			if (!gbi.HasUpdates)
+			{
+				return null;
+			}
+
+			string versionPath = Path.Combine("mods", folder, "mod.version");
+			DateTime? localVersion = null;
+
+			if (File.Exists(versionPath))
+			{
+				localVersion = DateTime.Parse(File.ReadAllText(versionPath).Trim());
+			}
+			else
+			{
+				var info = new FileInfo(Path.Combine("mods", folder, "mod.manifest"));
+				if (info.Exists)
+				{
+					localVersion = info.LastWriteTimeUtc;
+				}
+			}
+
+			GameBananaItemUpdate latestUpdate = gbi.Updates[0];
+
+			if (!ForceUpdate && localVersion.HasValue)
+			{
+				// No updates available.
+				if (localVersion >= latestUpdate.DateAdded)
+				{
+					return null;
+				}
+			}
+
+			var body = string.Join(Environment.NewLine, latestUpdate.Changes.Select(a => a.Category + ": " + a.Text)) + Environment.NewLine + latestUpdate.Text;
+
+			return new ModDownload(mod, Path.Combine("mods", folder), latestAsset.DownloadUrl, body, latestAsset.Size)
+			{
+				HomePage = gbi.ProfileUrl,
+				Name = latestUpdate.Title,
+				Version = latestUpdate.Title,
+				Published = latestUpdate.DateAdded,
+				Updated = latestUpdate.DateAdded,
+				ReleaseUrl = gbi.DownloadUrl
+			};
+		}
+
 		public ModDownload CheckModularVersion(ModInfo mod, string folder, List<ModManifest> localManifest,
 			UpdaterWebClient client, List<string> errors)
 		{
@@ -252,6 +312,14 @@ namespace ModManagerCommon
 						}
 
 						ModDownload d = GetGitHubReleases(mod, info.Key, client, errors);
+						if (d != null)
+						{
+							updates.Add(d);
+						}
+					}
+					else if (!string.IsNullOrEmpty(mod.GameBananaItemType) && mod.GameBananaItemId.HasValue)
+					{
+						ModDownload d = GetGameBananaReleases(mod, info.Key, errors);
 						if (d != null)
 						{
 							updates.Add(d);
