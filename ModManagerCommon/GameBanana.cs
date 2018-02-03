@@ -29,7 +29,7 @@ namespace ModManagerCommon
 
 	public class GameBananaItemUpdate
 	{
-		const DateTime epoch = new DateTime(1970, 1, 1);
+		static readonly DateTime epoch = new DateTime(1970, 1, 1);
 
 		[JsonProperty("_sTitle")]
 		public string Title { get; set; }
