@@ -7,9 +7,10 @@ namespace ModManagerCommon.Forms
 	{
 		string message;
 
-		public UpdateMessageDialog(string message)
+		public UpdateMessageDialog(string name, string message)
 		{
 			InitializeComponent();
+			this.Text = name + " Mod Manager";
 			this.message = message;
 		}
 

@@ -107,7 +107,7 @@
 			this.Name = "UpdateMessageDialog";
 			this.ShowIcon = false;
 			this.ShowInTaskbar = false;
-			this.Text = "SADX Mod Manager";
+			this.Text = "Mod Manager";
 			this.Load += new System.EventHandler(this.UpdateMessageDialog_Load);
 			this.ResumeLayout(false);
 			this.PerformLayout();
