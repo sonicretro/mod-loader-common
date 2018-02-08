@@ -169,7 +169,9 @@ namespace ModManagerCommon
 
 			var body = string.Join(Environment.NewLine, latestUpdate.Changes.Select(a => a.Category + ": " + a.Text)) + Environment.NewLine + latestUpdate.Text;
 
-			return new ModDownload(mod, Path.Combine("mods", folder), gbi.DownloadUrl, body, 0)
+			var dl = gbi.Files.First().Value;
+
+			return new ModDownload(mod, Path.Combine("mods", folder), dl.DownloadUrl, body, dl.Filesize)
 			{
 				HomePage = gbi.ProfileUrl,
 				Name = latestUpdate.Title,
