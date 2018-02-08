@@ -178,7 +178,7 @@ namespace ModManagerCommon
 				Version = latestUpdate.Title,
 				Published = latestUpdate.DateAdded.ToString(),
 				Updated = latestUpdate.DateAdded.ToString(),
-				ReleaseUrl = gbi.DownloadUrl
+				ReleaseUrl = gbi.ProfileUrl
 			};
 		}
 
