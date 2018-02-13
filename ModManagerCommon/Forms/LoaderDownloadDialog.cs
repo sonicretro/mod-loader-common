@@ -41,11 +41,6 @@ namespace ModManagerCommon.Forms
 			{
 				CancellationToken token = tokenSource.Token;
 
-				void OnExtracting(object o, CancelEventArgs args)
-				{
-					SetTaskAndStep("Extracting...");
-					args.Cancel = token.IsCancellationRequested;
-				}
 				void OnDownloadProgress(object o, DownloadProgressEventArgs args)
 				{
 					SetProgress(args.BytesReceived / (double)args.TotalBytesToReceive);
@@ -127,8 +122,8 @@ namespace ModManagerCommon.Forms
 								Directory.CreateDirectory(dataDir);
 							}
 
-							OnExtracting(this, cancelArgs);
-							if (cancelArgs.Cancel)
+							SetTaskAndStep("Extracting...");
+							if (token.IsCancellationRequested)
 							{
 								return;
 							}
