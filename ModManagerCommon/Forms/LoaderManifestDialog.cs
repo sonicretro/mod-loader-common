@@ -49,8 +49,8 @@ namespace ModManagerCommon.Forms
 						// poor man's await Task.Run (not available in .net 4.0)
 						using (var task = new Task(() =>
 						{
-							string newManPath = Path.Combine(updatePath, "mod.manifest");
-							string oldManPath = "mod.manifest";
+							string newManPath = Path.Combine(updatePath, "loader.manifest");
+							string oldManPath = "loader.manifest";
 
 							SetTaskAndStep("Parsing manifest...");
 							if (token.IsCancellationRequested)
