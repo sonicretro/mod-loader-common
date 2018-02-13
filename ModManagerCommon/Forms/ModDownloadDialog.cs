@@ -8,13 +8,13 @@ using System.Windows.Forms;
 
 namespace ModManagerCommon.Forms
 {
-	public class DownloadDialog : ProgressDialog
+	public class ModDownloadDialog : ProgressDialog
 	{
 		private readonly List<ModDownload> updates;
 		private readonly string updatePath;
 		private readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-		public DownloadDialog(List<ModDownload> updates, string updatePath)
+		public ModDownloadDialog(List<ModDownload> updates, string updatePath)
 			: base("Update Progress", true)
 		{
 			this.updates    = updates;

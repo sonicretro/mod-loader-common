@@ -47,7 +47,10 @@
     <Compile Include="Controls\ModUpdateDetails.Designer.cs">
       <DependentUpon>ModUpdateDetails.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\DownloadDialog.cs">
+    <Compile Include="Forms\LoaderDownloadDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ModDownloadDialog.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\ManifestDialog.cs">
