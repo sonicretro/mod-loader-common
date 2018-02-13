@@ -4,7 +4,7 @@ namespace ModManagerCommon
 {
 	// Source: http://stackoverflow.com/questions/14488796/does-net-provide-an-easy-way-convert-bytes-to-kb-mb-gb-etc
 
-	static class SizeSuffix
+	public static class SizeSuffix
 	{
 		private static readonly string[] sizeSuffixes =
 			{ "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };

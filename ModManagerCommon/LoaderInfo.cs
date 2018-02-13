@@ -4,7 +4,7 @@ using IniFile;
 
 namespace ModManagerCommon
 {
-	enum UpdateUnit
+	public enum UpdateUnit
 	{
 		Always,
 		Hours,
@@ -12,7 +12,7 @@ namespace ModManagerCommon
 		Weeks,
 	}
 
-	class LoaderInfo
+	public class LoaderInfo
 	{
 		[DefaultValue(true)]
 		public bool UpdateCheck { get; set; } = true;
