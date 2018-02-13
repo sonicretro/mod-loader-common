@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -132,7 +131,7 @@ namespace ModManagerCommon.Forms
 						});
 					}
 					} while (result == DialogResult.Retry);
-
+				Close();
 			}
 		}
 
