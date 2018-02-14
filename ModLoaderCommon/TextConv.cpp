@@ -39,7 +39,7 @@ char *UTF16toMBS(const wchar_t *wcs, unsigned int cp)
 	if (cbMbs <= 0)
 		return nullptr;
 	char *mbs = new char[cbMbs];
-	WideCharToMultiByte(CP_UTF8, 0, wcs, -1, mbs, cbMbs, NULL, NULL);
+	WideCharToMultiByte(cp, 0, wcs, -1, mbs, cbMbs, NULL, NULL);
 	return mbs;
 }
 
