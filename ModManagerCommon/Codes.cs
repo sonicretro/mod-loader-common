@@ -15,18 +15,192 @@ namespace ModManagerCommon
 
 		public static CodeList Load(string filename)
 		{
-			using (FileStream fs = File.OpenRead(filename))
-				return (CodeList)serializer.Deserialize(fs);
+			if (Path.GetExtension(filename).Equals(".xml", StringComparison.OrdinalIgnoreCase))
+				using (FileStream fs = File.OpenRead(filename))
+					return (CodeList)serializer.Deserialize(fs);
+			else
+				using (StreamReader sr = File.OpenText(filename))
+				{
+					CodeList result = new CodeList();
+					Stack<Tuple<List<CodeLine>, List<CodeLine>>> stack = new Stack<Tuple<List<CodeLine>, List<CodeLine>>>();
+					int linenum = 0;
+					while (!sr.EndOfStream)
+					{
+						++linenum;
+						string line = sr.ReadLine().Trim(' ', '\t');
+						if (line.Length == 0) continue;
+						if (line.StartsWith(";")) continue;
+						string[] split = line.Split(' ');
+						Code code = null;
+						if (stack.Count == 0)
+						{
+							switch (split[0])
+							{
+								case "Code":
+									code = new Code();
+									ProcessCodeLine(filename, linenum, split, code);
+									result.Codes.Add(code);
+									stack.Push(new Tuple<List<CodeLine>, List<CodeLine>>(code.Lines, null));
+									break;
+								case "Patch":
+									code = new Code() { Patch = true };
+									ProcessCodeLine(filename, linenum, split, code);
+									result.Codes.Add(code);
+									stack.Push(new Tuple<List<CodeLine>, List<CodeLine>>(code.Lines, null));
+									break;
+								default:
+									throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
+							}
+						}
+						else if (Enum.TryParse(split[0], out CodeType type))
+						{
+							switch (type)
+							{
+								case CodeType.@else:
+									if (stack.Peek().Item2 == null)
+										throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
+									stack.Push(new Tuple<List<CodeLine>, List<CodeLine>>(stack.Pop().Item2, null));
+									continue;
+								case CodeType.endif:
+									if (stack.Count < 2)
+										throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
+									stack.Pop();
+									continue;
+								case CodeType.newregs:
+									throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
+								default:
+									break;
+							}
+							CodeLine cl = new CodeLine() { Type = type };
+							string address = split[1];
+							if (address.StartsWith("p"))
+							{
+								cl.Pointer = true;
+								string[] offs = address.Split('|');
+								cl.Address = offs[0].Substring(1);
+								if (offs.Length > 1)
+								{
+									cl.Offsets = new List<int>();
+									for (int i = 1; i < offs.Length; i++)
+										cl.Offsets.Add(int.Parse(offs[i], System.Globalization.NumberStyles.HexNumber));
+								}
+							}
+							else
+								cl.Address = address;
+							int it = 2;
+							switch (type)
+							{
+								case CodeType.s8tos32:
+								case CodeType.s16tos32:
+								case CodeType.s32tofloat:
+								case CodeType.u32tofloat:
+								case CodeType.floattos32:
+								case CodeType.floattou32:
+									cl.Value = "0";
+									break;
+								default:
+									cl.Value = split[it++];
+									break;
+							}
+							if (it < split.Length)
+								cl.RepeatCount = uint.Parse(split[it++]);
+							stack.Peek().Item1.Add(cl);
+							if (cl.IsIf)
+								stack.Push(new Tuple<List<CodeLine>, List<CodeLine>>(cl.TrueLines, cl.FalseLines));
+						}
+						else
+							throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
+					}
+					return result;
+				}
+		}
+
+		private static void ProcessCodeLine(string filename, int linenum, string[] split, Code code)
+		{
+			var sb = new System.Text.StringBuilder(split[1].TrimStart('"'));
+			int i = 2;
+			if (!split[1].EndsWith("\""))
+				for (; i < split.Length; i++)
+				{
+					sb.AppendFormat(" {0}", split[i]);
+					if (split[i].EndsWith("\"")) { ++i; break; }
+				}
+			code.Name = sb.ToString().TrimEnd('"');
+			if (i < split.Length)
+				for (; i < split.Length; i++)
+				{
+					if (split[i].StartsWith(";")) break;
+					switch (split[i])
+					{
+						case "Required":
+							code.Required = true;
+							break;
+						default:
+							throw new Exception($"Unknown attribute {split[i]} in code \"{code.Name}\" in {filename}:line {linenum}");
+					}
+				}
 		}
 
 		public void Save(string filename)
 		{
-			using (FileStream fs = File.Create(filename))
-				serializer.Serialize(fs, this);
+			if (Path.GetExtension(filename).Equals(".xml", StringComparison.OrdinalIgnoreCase))
+				using (FileStream fs = File.Create(filename))
+					serializer.Serialize(fs, this);
+			else
+				using (StreamWriter sw = File.CreateText(filename))
+				{
+					foreach (Code code in Codes)
+					{
+						sw.Write("{0} \"{1}\"", code.Patch ? "Patch" : "Code", code.Name);
+						if (code.Required)
+							sw.Write(" Required");
+						sw.WriteLine();
+						List<CodeLine> lines = code.Lines;
+						SaveCodeLines(sw, lines, 0);
+						sw.WriteLine();
+					}
+				}
+		}
+
+		private static void SaveCodeLines(StreamWriter sw, List<CodeLine> lines, int indent)
+		{
+			foreach (CodeLine line in lines)
+			{
+				sw.Write("{0}{1} ", new string('\t', indent), line.Type);
+				if (line.Pointer)
+					sw.Write("p");
+				sw.Write(line.Address);
+				if (line.Offsets != null)
+					foreach (int off in line.Offsets)
+						sw.Write("|{0:X}", off);
+				switch (line.ValueType)
+				{
+					case ValueType.hex:
+						sw.Write(" 0x{0}", line.Value);
+						break;
+					default:
+						sw.Write(" {0}", line.Value);
+						break;
+				}
+				if (line.RepeatCount.HasValue)
+					sw.Write(" x{0}", line.RepeatCount.Value);
+				sw.WriteLine();
+				if (line.IsIf)
+				{
+					if (line.TrueLines != null && line.TrueLines.Count > 0)
+						SaveCodeLines(sw, line.TrueLines, indent + 1);
+					if (line.FalseLines != null && line.FalseLines.Count > 0)
+					{
+						sw.WriteLine("{0}else", new string('\t', indent));
+						SaveCodeLines(sw, line.FalseLines, indent + 1);
+					}
+					sw.WriteLine("{0}endif", new string('\t', indent));
+				}
+			}
 		}
 
 		[XmlElement("Code")]
-		public List<Code> Codes { get; set; }
+		public List<Code> Codes { get; set; } = new List<Code>();
 
 		public static void WriteDatFile(string path, IList<Code> codes)
 		{
@@ -72,26 +246,19 @@ namespace ModManagerCommon
 				else
 					switch (line.ValueType)
 					{
+						case null:
+							if (line.Value.StartsWith("0x"))
+								bw.Write(uint.Parse(line.Value.Substring(2), System.Globalization.NumberStyles.HexNumber, System.Globalization.NumberFormatInfo.InvariantInfo));
+							else if (line.IsFloat)
+								bw.Write(float.Parse(line.Value, System.Globalization.NumberStyles.Float, System.Globalization.NumberFormatInfo.InvariantInfo));
+							else
+								bw.Write(unchecked((int)long.Parse(line.Value, System.Globalization.NumberStyles.Integer, System.Globalization.NumberFormatInfo.InvariantInfo)));
+							break;
 						case ValueType.@decimal:
-							switch (line.Type)
-							{
-								case CodeType.writefloat:
-								case CodeType.addfloat:
-								case CodeType.subfloat:
-								case CodeType.mulfloat:
-								case CodeType.divfloat:
-								case CodeType.ifeqfloat:
-								case CodeType.ifnefloat:
-								case CodeType.ifltfloat:
-								case CodeType.iflteqfloat:
-								case CodeType.ifgtfloat:
-								case CodeType.ifgteqfloat:
-									bw.Write(float.Parse(line.Value, System.Globalization.NumberStyles.Float, System.Globalization.NumberFormatInfo.InvariantInfo));
-									break;
-								default:
-									bw.Write(unchecked((int)long.Parse(line.Value, System.Globalization.NumberStyles.Integer, System.Globalization.NumberFormatInfo.InvariantInfo)));
-									break;
-							}
+							if (line.IsFloat)
+								bw.Write(float.Parse(line.Value, System.Globalization.NumberStyles.Float, System.Globalization.NumberFormatInfo.InvariantInfo));
+							else
+								bw.Write(unchecked((int)long.Parse(line.Value, System.Globalization.NumberStyles.Integer, System.Globalization.NumberFormatInfo.InvariantInfo)));
 							break;
 						case ValueType.hex:
 							bw.Write(uint.Parse(line.Value, System.Globalization.NumberStyles.HexNumber, System.Globalization.NumberFormatInfo.InvariantInfo));
@@ -121,7 +288,7 @@ namespace ModManagerCommon
 		[XmlAttribute("patch")]
 		public bool Patch { get; set; }
 		[XmlElement("CodeLine")]
-		public List<CodeLine> Lines { get; set; }
+		public List<CodeLine> Lines { get; set; } = new List<CodeLine>();
 
 		[XmlIgnore]
 		public bool IsReg { get { return Lines.Any((line) => line.IsReg); } }
@@ -148,18 +315,53 @@ namespace ModManagerCommon
 		public bool OffsetStringsSpecified { get { return Offsets != null && Offsets.Count > 0; } set { } }
 		[XmlElement(IsNullable = false)]
 		public string Value { get; set; }
-		public ValueType ValueType { get; set; }
+		public ValueType? ValueType { get; set; }
 		public uint? RepeatCount { get; set; }
 		[XmlIgnore]
 		public bool RepeatCountSpecified { get { return RepeatCount.HasValue; } set { } }
 		[XmlArray]
-		public List<CodeLine> TrueLines { get; set; }
+		public List<CodeLine> TrueLines { get; set; } = new List<CodeLine>();
 		[XmlIgnore]
 		public bool TrueLinesSpecified { get { return TrueLines.Count > 0 && IsIf; } set { } }
 		[XmlArray]
-		public List<CodeLine> FalseLines { get; set; }
+		public List<CodeLine> FalseLines { get; set; } = new List<CodeLine>();
 		[XmlIgnore]
 		public bool FalseLinesSpecified { get { return FalseLines.Count > 0 && IsIf; } set { } }
+
+		[XmlIgnore]
+		public bool IsFloat
+		{
+			get
+			{
+				switch (Type)
+				{
+					case CodeType.writefloat:
+					case CodeType.addfloat:
+					case CodeType.subfloat:
+					case CodeType.mulfloat:
+					case CodeType.divfloat:
+					case CodeType.ifeqfloat:
+					case CodeType.ifnefloat:
+					case CodeType.ifltfloat:
+					case CodeType.iflteqfloat:
+					case CodeType.ifgtfloat:
+					case CodeType.ifgteqfloat:
+					case CodeType.addregfloat:
+					case CodeType.subregfloat:
+					case CodeType.mulregfloat:
+					case CodeType.divregfloat:
+					case CodeType.ifeqregfloat:
+					case CodeType.ifneregfloat:
+					case CodeType.ifltregfloat:
+					case CodeType.iflteqregfloat:
+					case CodeType.ifgtregfloat:
+					case CodeType.ifgteqregfloat:
+						return true;
+					default:
+						return false;
+				}
+			}
+		}
 
 		[XmlIgnore]
 		public bool IsIf
