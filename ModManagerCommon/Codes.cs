@@ -32,84 +32,89 @@ namespace ModManagerCommon
 						if (line.StartsWith(";")) continue;
 						string[] split = line.Split(' ');
 						Code code = null;
-						if (stack.Count == 0)
+						switch (split[0])
 						{
-							switch (split[0])
-							{
-								case "Code":
-									code = new Code();
-									ProcessCodeLine(filename, linenum, split, code);
-									result.Codes.Add(code);
-									stack.Push(new Tuple<List<CodeLine>, List<CodeLine>>(code.Lines, null));
-									break;
-								case "Patch":
-									code = new Code() { Patch = true };
-									ProcessCodeLine(filename, linenum, split, code);
-									result.Codes.Add(code);
-									stack.Push(new Tuple<List<CodeLine>, List<CodeLine>>(code.Lines, null));
-									break;
-								default:
+							case "Code":
+								if (stack.Count > 1)
 									throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
-							}
-						}
-						else if (Enum.TryParse(split[0], out CodeType type))
-						{
-							switch (type)
-							{
-								case CodeType.@else:
-									if (stack.Peek().Item2 == null)
-										throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
-									stack.Push(new Tuple<List<CodeLine>, List<CodeLine>>(stack.Pop().Item2, null));
-									continue;
-								case CodeType.endif:
-									if (stack.Count < 2)
-										throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
+								if (stack.Count == 1)
 									stack.Pop();
-									continue;
-								case CodeType.newregs:
+								code = new Code();
+								ProcessCodeLine(filename, linenum, split, code);
+								result.Codes.Add(code);
+								stack.Push(new Tuple<List<CodeLine>, List<CodeLine>>(code.Lines, null));
+								break;
+							case "Patch":
+								if (stack.Count > 1)
 									throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
-								default:
-									break;
-							}
-							CodeLine cl = new CodeLine() { Type = type };
-							string address = split[1];
-							if (address.StartsWith("p"))
-							{
-								cl.Pointer = true;
-								string[] offs = address.Split('|');
-								cl.Address = offs[0].Substring(1);
-								if (offs.Length > 1)
+								if (stack.Count == 1)
+									stack.Pop();
+								code = new Code() { Patch = true };
+								ProcessCodeLine(filename, linenum, split, code);
+								result.Codes.Add(code);
+								stack.Push(new Tuple<List<CodeLine>, List<CodeLine>>(code.Lines, null));
+								break;
+							default:
+								if (Enum.TryParse(split[0], out CodeType type))
 								{
-									cl.Offsets = new List<int>();
-									for (int i = 1; i < offs.Length; i++)
-										cl.Offsets.Add(int.Parse(offs[i], System.Globalization.NumberStyles.HexNumber));
+									switch (type)
+									{
+										case CodeType.@else:
+											if (stack.Peek().Item2 == null)
+												throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
+											stack.Push(new Tuple<List<CodeLine>, List<CodeLine>>(stack.Pop().Item2, null));
+											continue;
+										case CodeType.endif:
+											if (stack.Count < 2)
+												throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
+											stack.Pop();
+											continue;
+										case CodeType.newregs:
+											throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
+										default:
+											break;
+									}
+									CodeLine cl = new CodeLine() { Type = type };
+									string address = split[1];
+									if (address.StartsWith("p"))
+									{
+										cl.Pointer = true;
+										string[] offs = address.Split('|');
+										cl.Address = offs[0].Substring(1);
+										if (offs.Length > 1)
+										{
+											cl.Offsets = new List<int>();
+											for (int i = 1; i < offs.Length; i++)
+												cl.Offsets.Add(int.Parse(offs[i], System.Globalization.NumberStyles.HexNumber));
+										}
+									}
+									else
+										cl.Address = address;
+									int it = 2;
+									switch (type)
+									{
+										case CodeType.s8tos32:
+										case CodeType.s16tos32:
+										case CodeType.s32tofloat:
+										case CodeType.u32tofloat:
+										case CodeType.floattos32:
+										case CodeType.floattou32:
+											cl.Value = "0";
+											break;
+										default:
+											cl.Value = split[it++];
+											break;
+									}
+									if (it < split.Length)
+										cl.RepeatCount = uint.Parse(split[it++].Substring(1));
+									stack.Peek().Item1.Add(cl);
+									if (cl.IsIf)
+										stack.Push(new Tuple<List<CodeLine>, List<CodeLine>>(cl.TrueLines, cl.FalseLines));
 								}
-							}
-							else
-								cl.Address = address;
-							int it = 2;
-							switch (type)
-							{
-								case CodeType.s8tos32:
-								case CodeType.s16tos32:
-								case CodeType.s32tofloat:
-								case CodeType.u32tofloat:
-								case CodeType.floattos32:
-								case CodeType.floattou32:
-									cl.Value = "0";
-									break;
-								default:
-									cl.Value = split[it++];
-									break;
-							}
-							if (it < split.Length)
-								cl.RepeatCount = uint.Parse(split[it++]);
-							stack.Peek().Item1.Add(cl);
-							if (cl.IsIf)
-								stack.Push(new Tuple<List<CodeLine>, List<CodeLine>>(cl.TrueLines, cl.FalseLines));
+								else
+									throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
+								break;
 						}
-						else
-							throw new FormatException($"Invalid code line \"{line}\" in {filename}:line {linenum}");
 					}
 					return result;
 				}
