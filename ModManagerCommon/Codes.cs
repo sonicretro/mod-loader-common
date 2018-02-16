@@ -105,7 +105,7 @@ namespace ModManagerCommon
 											cl.Value = split[it++];
 											break;
 									}
-									if (it < split.Length)
+									if (it < split.Length && !split[it].StartsWith(";"))
 										cl.RepeatCount = uint.Parse(split[it++].Substring(1));
 									stack.Peek().Item1.Add(cl);
 									if (cl.IsIf)
