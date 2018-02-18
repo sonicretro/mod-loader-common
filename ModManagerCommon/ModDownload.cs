@@ -216,7 +216,7 @@ namespace ModManagerCommon
 							return;
 						}
 
-						if (!File.Exists(newManPath))
+						if (!File.Exists(newManPath) || !File.Exists(oldManPath))
 						{
 							CopyDirectory(new DirectoryInfo(workDir), Directory.CreateDirectory(Folder));
 							Directory.Delete(dataDir, true);
@@ -237,23 +237,20 @@ namespace ModManagerCommon
 							return;
 						}
 
-						if (File.Exists(oldManPath))
+						List<ModManifest> oldManifest = ModManifest.FromFile(oldManPath);
+						List<string> oldFiles = oldManifest.Except(newManifest)
+							.Select(x => Path.Combine(Folder, x.FilePath))
+							.ToList();
+
+						foreach (string file in oldFiles)
 						{
-							List<ModManifest> oldManifest = ModManifest.FromFile(oldManPath);
-							List<string> oldFiles = oldManifest.Except(newManifest)
-								.Select(x => Path.Combine(Folder, x.FilePath))
-								.ToList();
-
-							foreach (string file in oldFiles)
+							if (File.Exists(file))
 							{
-								if (File.Exists(file))
-								{
-									File.Delete(file);
-								}
+								File.Delete(file);
 							}
-
-							RemoveEmptyDirectories(oldManifest, newManifest);
 						}
+
+						RemoveEmptyDirectories(oldManifest, newManifest);
 
 						foreach (ModManifest file in newManifest)
 						{
