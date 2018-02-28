@@ -173,7 +173,7 @@ string SJIStoUTF8(const string &sjis)
  */
 string UTF8toSJIS(const string &utf8)
 {
-	char *sjis = SJIStoUTF8(utf8.c_str());
+	char *sjis = UTF8toSJIS(utf8.c_str());
 	if (!sjis)
 		return string();
 
@@ -189,7 +189,7 @@ string UTF8toSJIS(const string &utf8)
  */
 string UTF8to1252(const string &utf8)
 {
-	char *w1252 = SJIStoUTF8(utf8.c_str());
+	char *w1252 = UTF8to1252(utf8.c_str());
 	if (!w1252)
 		return string();
 
