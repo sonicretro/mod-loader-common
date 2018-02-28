@@ -350,7 +350,7 @@ namespace ModManagerCommon
 				throw new Exception($"Absolute paths are forbidden: {FilePath}");
 			}
 
-			if (FilePath.Contains(".."))
+			if (FilePath.StartsWith(@"..\") || FilePath.Contains(@"\..\"))
 			{
 				throw new Exception($"Parent directory traversal is forbidden: {FilePath}");
 			}
