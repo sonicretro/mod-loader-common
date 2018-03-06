@@ -79,6 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CodeParser.hpp" />
+    <ClInclude Include="FileSystem.h" />
     <ClInclude Include="IniFile.hpp" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -86,6 +87,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CodeParser.cpp" />
+    <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="IniFile.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
