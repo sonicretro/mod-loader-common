@@ -81,7 +81,7 @@ string GetBaseName(const string& path)
 
 void StripExtension(string& path)
 {
-	auto dot = path.find('.');
+	auto dot = path.rfind('.');
 	if (dot != string::npos)
 	{
 		path.resize(dot);
@@ -90,7 +90,7 @@ void StripExtension(string& path)
 
 string GetExtension(const string& path, bool includeDot)
 {
-	auto dot = path.find('.');
+	auto dot = path.rfind('.');
 	if (dot == string::npos)
 	{
 		return string();
@@ -114,7 +114,7 @@ void ReplaceFileExtension(string &filename, const char *ext)
 	assert(ext != nullptr);
 
 	// Find the last '.'.
-	size_t dot = filename.find_last_of('.');
+	size_t dot = filename.rfind('.');
 	if (dot == string::npos)
 	{
 		// No dot; no extension.
