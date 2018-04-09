@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -85,6 +86,11 @@ namespace ModManagerCommon.Forms
 				var entry = items[0].Tag as ModDownload;
 				SetModDetails(entry);
 			}
+		}
+
+		private void textChangeLog_LinkClicked(object sender, LinkClickedEventArgs e)
+		{
+			Process.Start(e.LinkText);
 		}
 	}
 }

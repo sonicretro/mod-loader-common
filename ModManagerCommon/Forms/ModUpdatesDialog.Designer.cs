@@ -37,20 +37,20 @@
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this.tabPageChanges = new System.Windows.Forms.TabPage();
 			this.textChangeLog = new System.Windows.Forms.RichTextBox();
-			this.tabPageDetails = new System.Windows.Forms.TabPage();
-			this.modUpdateDetails = new ModManagerCommon.Controls.ModUpdateDetails();
 			this.tabPageFiles = new System.Windows.Forms.TabPage();
 			this.listFiles = new System.Windows.Forms.ListView();
 			this.columnStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnFile = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.tabPageDetails = new System.Windows.Forms.TabPage();
+			this.modUpdateDetails = new ModManagerCommon.Controls.ModUpdateDetails();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.Panel2.SuspendLayout();
 			this.splitContainer1.SuspendLayout();
 			this.tabControl1.SuspendLayout();
 			this.tabPageChanges.SuspendLayout();
-			this.tabPageDetails.SuspendLayout();
 			this.tabPageFiles.SuspendLayout();
+			this.tabPageDetails.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// label1
@@ -161,29 +161,7 @@
 			this.textChangeLog.Size = new System.Drawing.Size(358, 183);
 			this.textChangeLog.TabIndex = 0;
 			this.textChangeLog.Text = "";
-			// 
-			// tabPageDetails
-			// 
-			this.tabPageDetails.AutoScroll = true;
-			this.tabPageDetails.Controls.Add(this.modUpdateDetails);
-			this.tabPageDetails.Location = new System.Drawing.Point(4, 22);
-			this.tabPageDetails.Name = "tabPageDetails";
-			this.tabPageDetails.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPageDetails.Size = new System.Drawing.Size(364, 189);
-			this.tabPageDetails.TabIndex = 1;
-			this.tabPageDetails.Text = "Details";
-			this.tabPageDetails.UseVisualStyleBackColor = true;
-			// 
-			// modUpdateDetails
-			// 
-			this.modUpdateDetails.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.modUpdateDetails.Enabled = false;
-			this.modUpdateDetails.Location = new System.Drawing.Point(3, 0);
-			this.modUpdateDetails.Margin = new System.Windows.Forms.Padding(0);
-			this.modUpdateDetails.Name = "modUpdateDetails";
-			this.modUpdateDetails.Size = new System.Drawing.Size(361, 150);
-			this.modUpdateDetails.TabIndex = 0;
+			this.textChangeLog.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(this.textChangeLog_LinkClicked);
 			// 
 			// tabPageFiles
 			// 
@@ -222,6 +200,29 @@
 			this.columnFile.Text = "File";
 			this.columnFile.Width = 248;
 			// 
+			// tabPageDetails
+			// 
+			this.tabPageDetails.AutoScroll = true;
+			this.tabPageDetails.Controls.Add(this.modUpdateDetails);
+			this.tabPageDetails.Location = new System.Drawing.Point(4, 22);
+			this.tabPageDetails.Name = "tabPageDetails";
+			this.tabPageDetails.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPageDetails.Size = new System.Drawing.Size(364, 189);
+			this.tabPageDetails.TabIndex = 1;
+			this.tabPageDetails.Text = "Details";
+			this.tabPageDetails.UseVisualStyleBackColor = true;
+			// 
+			// modUpdateDetails
+			// 
+			this.modUpdateDetails.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.modUpdateDetails.Enabled = false;
+			this.modUpdateDetails.Location = new System.Drawing.Point(3, 0);
+			this.modUpdateDetails.Margin = new System.Windows.Forms.Padding(0);
+			this.modUpdateDetails.Name = "modUpdateDetails";
+			this.modUpdateDetails.Size = new System.Drawing.Size(361, 150);
+			this.modUpdateDetails.TabIndex = 0;
+			// 
 			// ModUpdatesDialog
 			// 
 			this.AcceptButton = this.buttonInstall;
@@ -245,8 +246,8 @@
 			this.splitContainer1.ResumeLayout(false);
 			this.tabControl1.ResumeLayout(false);
 			this.tabPageChanges.ResumeLayout(false);
-			this.tabPageDetails.ResumeLayout(false);
 			this.tabPageFiles.ResumeLayout(false);
+			this.tabPageDetails.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
