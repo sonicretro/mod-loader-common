@@ -106,7 +106,7 @@ int IniGroup::getIntRadix(const string &key, int radix, int def) const
 	if (iter == m_data.end())
 		return def;
 
-	return std::stoi(iter->second, nullptr, radix);
+	return (int)std::stoll(iter->second, nullptr, radix);
 }
 
 /**
