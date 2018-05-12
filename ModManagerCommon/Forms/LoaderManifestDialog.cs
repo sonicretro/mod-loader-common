@@ -35,107 +35,105 @@ namespace ModManagerCommon.Forms
 			SetTaskCount(1);
 			SetProgress(1);
 
-			using (var client = new UpdaterWebClient())
+			CancellationToken token = tokenSource.Token;
+
+			DialogResult result;
+			do
 			{
-				CancellationToken token = tokenSource.Token;
+				result = DialogResult.Cancel;
 
-				DialogResult result;
-					do
+				try
+				{
+					// poor man's await Task.Run (not available in .net 4.0)
+					using (var task = new Task(() =>
 					{
-						result = DialogResult.Cancel;
+						string newManPath = Path.Combine(updatePath, "loader.manifest");
+						string oldManPath = "loader.manifest";
 
-					try
-					{
-						// poor man's await Task.Run (not available in .net 4.0)
-						using (var task = new Task(() =>
+						SetTaskAndStep("Parsing manifest...");
+						if (token.IsCancellationRequested)
 						{
-							string newManPath = Path.Combine(updatePath, "loader.manifest");
-							string oldManPath = "loader.manifest";
-
-							SetTaskAndStep("Parsing manifest...");
-							if (token.IsCancellationRequested)
-							{
-								return;
-							}
-
-							List<ModManifest> newManifest = ModManifest.FromFile(newManPath);
-
-							SetTaskAndStep("Applying manifest...");
-							if (token.IsCancellationRequested)
-							{
-								return;
-							}
-
-							if (File.Exists(oldManPath))
-							{
-								List<ModManifest> oldManifest = ModManifest.FromFile(oldManPath);
-								List<string> oldFiles = oldManifest.Except(newManifest)
-									.Select(x => x.FilePath)
-									.ToList();
-
-								foreach (string file in oldFiles)
-								{
-									if (File.Exists(file))
-									{
-										File.Delete(file);
-									}
-								}
-
-								RemoveEmptyDirectories(oldManifest, newManifest);
-							}
-
-							foreach (ModManifest file in newManifest)
-							{
-								string dir = Path.GetDirectoryName(file.FilePath);
-								if (!string.IsNullOrEmpty(dir))
-								{
-									string newDir = dir;
-									if (!Directory.Exists(newDir))
-									{
-										Directory.CreateDirectory(newDir);
-									}
-								}
-
-								string dest = file.FilePath;
-
-								if (File.Exists(dest))
-								{
-									File.Delete(dest);
-								}
-
-								File.Copy(Path.Combine(updatePath, file.FilePath), dest);
-							}
-
-							File.Copy(newManPath, oldManPath, true);
-
-							Process.Start(Path.GetFileName(Application.ExecutablePath), $"cleanupdate \"{updatePath}\"");
-						}, token))
-						{
-							task.Start();
-
-							while (!task.IsCompleted && !task.IsCanceled)
-							{
-								Application.DoEvents();
-							}
-
-							task.Wait(token);
+							return;
 						}
-					}
-					catch (AggregateException ae)
-					{
-						ae.Handle(ex =>
+
+						List<ModManifestEntry> newManifest = ModManifest.FromFile(newManPath);
+
+						SetTaskAndStep("Applying manifest...");
+						if (token.IsCancellationRequested)
 						{
-							result = MessageBox.Show(this, $"Failed to update:\r\n{ ex.Message }",
-								"Update Failed", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
-							return true;
-						});
+							return;
+						}
+
+						if (File.Exists(oldManPath))
+						{
+							List<ModManifestEntry> oldManifest = ModManifest.FromFile(oldManPath);
+							List<string> oldFiles = oldManifest.Except(newManifest)
+								.Select(x => x.FilePath)
+								.ToList();
+
+							foreach (string file in oldFiles)
+							{
+								if (File.Exists(file))
+								{
+									File.Delete(file);
+								}
+							}
+
+							RemoveEmptyDirectories(oldManifest, newManifest);
+						}
+
+						foreach (ModManifestEntry file in newManifest)
+						{
+							string dir = Path.GetDirectoryName(file.FilePath);
+							if (!string.IsNullOrEmpty(dir))
+							{
+								string newDir = dir;
+								if (!Directory.Exists(newDir))
+								{
+									Directory.CreateDirectory(newDir);
+								}
+							}
+
+							string dest = file.FilePath;
+
+							if (File.Exists(dest))
+							{
+								File.Delete(dest);
+							}
+
+							File.Copy(Path.Combine(updatePath, file.FilePath), dest);
+						}
+
+						File.Copy(newManPath, oldManPath, true);
+
+						Process.Start(Path.GetFileName(Application.ExecutablePath), $"cleanupdate \"{updatePath}\"");
+					}, token))
+					{
+						task.Start();
+
+						while (!task.IsCompleted && !task.IsCanceled)
+						{
+							Application.DoEvents();
+						}
+
+						task.Wait(token);
 					}
-					} while (result == DialogResult.Retry);
-				Close();
-			}
+				}
+				catch (AggregateException ae)
+				{
+					ae.Handle(ex =>
+					{
+						result = MessageBox.Show(this, $"Failed to update:\r\n{ex.Message}",
+							"Update Failed", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
+						return true;
+					});
+				}
+			} while (result == DialogResult.Retry);
+
+			Close();
 		}
 
-		private void RemoveEmptyDirectories(IEnumerable<ModManifest> oldManifest, IEnumerable<ModManifest> newManifest)
+		private void RemoveEmptyDirectories(IEnumerable<ModManifestEntry> oldManifest, IEnumerable<ModManifestEntry> newManifest)
 		{
 			// Grab all directories that exist only in the old manifest.
 			var directories = new HashSet<string>
@@ -148,7 +146,7 @@ namespace ModManagerCommon.Forms
 			);
 
 			// ok delete them thx
-			foreach (var dir in directories)
+			foreach (string dir in directories)
 			{
 				if (Directory.Exists(dir))
 				{

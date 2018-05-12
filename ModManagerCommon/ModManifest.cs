@@ -7,22 +7,54 @@ using System.Security.Cryptography;
 
 namespace ModManagerCommon
 {
+	/// <summary>
+	/// Represents the difference between two <see cref="ModManifestEntry"/>s.
+	/// </summary>
 	public enum ModManifestState
 	{
+		/// <summary>
+		/// The file is unchanged.
+		/// </summary>
 		Unchanged,
+		/// <summary>
+		/// Indicates that a file has been moved, renamed, or both.
+		/// </summary>
 		Moved,
+		/// <summary>
+		/// The file has been modified in some way.
+		/// </summary>
 		Changed,
+		/// <summary>
+		/// The file has been added to the new manifest.
+		/// </summary>
 		Added,
+		/// <summary>
+		/// The file has been removed from the new manifest.
+		/// </summary>
 		Removed
 	}
 
+	/// <summary>
+	/// Holds two instances of <see cref="ModManifestEntry"/> and their differences.
+	/// </summary>
+	/// <seealso cref="ModManifestState"/>
 	public class ModManifestDiff
 	{
+		/// <summary>
+		/// The state of the file.
+		/// </summary>
+		/// <seealso cref="ModManifestState"/>
 		public readonly ModManifestState State;
-		public readonly ModManifest Current;
-		public readonly ModManifest Last;
+		/// <summary>
+		/// The newer of the two entries.
+		/// </summary>
+		public readonly ModManifestEntry Current;
+		/// <summary>
+		/// The older of the two entries.
+		/// </summary>
+		public readonly ModManifestEntry Last;
 
-		public ModManifestDiff(ModManifestState state, ModManifest current, ModManifest last)
+		public ModManifestDiff(ModManifestState state, ModManifestEntry current, ModManifestEntry last)
 		{
 			State   = state;
 			Current = current;
@@ -59,22 +91,27 @@ namespace ModManagerCommon
 	public class ModManifestGenerator
 	{
 		public event EventHandler<FilesIndexedEventArgs> FilesIndexed;
-		public event EventHandler<FileHashEventArgs> FileHashStart;
-		public event EventHandler<FileHashEventArgs> FileHashEnd;
+		public event EventHandler<FileHashEventArgs>     FileHashStart;
+		public event EventHandler<FileHashEventArgs>     FileHashEnd;
 
-		public List<ModManifest> Generate(string modPath)
+		/// <summary>
+		/// Generates a manifest for a given mod.
+		/// </summary>
+		/// <param name="modPath">The path to the mod directory.</param>
+		/// <returns>A list of <see cref="ModManifestEntry"/>.</returns>
+		public List<ModManifestEntry> Generate(string modPath)
 		{
 			if (!Directory.Exists(modPath))
 			{
 				throw new DirectoryNotFoundException();
 			}
 
-			int i = 0;
-			var result = new List<ModManifest>();
+			var result = new List<ModManifestEntry>();
+
 			List<string> fileIndex = Directory.EnumerateFiles(modPath, "*", SearchOption.AllDirectories)
-				.Where(x => !string.IsNullOrEmpty(x)
-				            && !Path.GetFileName(x).Equals("mod.manifest", StringComparison.InvariantCultureIgnoreCase)
-				            && !Path.GetFileName(x).Equals("mod.version", StringComparison.InvariantCultureIgnoreCase))
+				.Where(x => !string.IsNullOrEmpty(x) &&
+				            !Path.GetFileName(x).Equals("mod.manifest") &&
+				            !Path.GetFileName(x).Equals("mod.version"))
 				.ToList();
 
 			if (fileIndex.Count < 1)
@@ -84,14 +121,16 @@ namespace ModManagerCommon
 
 			OnFilesIndexed(new FilesIndexedEventArgs(fileIndex.Count));
 
-			foreach (var f in fileIndex)
+			int index = 0;
+
+			foreach (string f in fileIndex)
 			{
-				var relativePath = f.Substring(modPath.Length + 1);
+				string relativePath = f.Substring(modPath.Length + 1);
 				FileInfo file = GetFileInfo(f);
 
-				++i;
+				++index;
 
-				var args = new FileHashEventArgs(relativePath, i, fileIndex.Count);
+				var args = new FileHashEventArgs(relativePath, index, fileIndex.Count);
 				OnFileHashStart(args);
 
 				if (args.Cancel)
@@ -101,7 +140,7 @@ namespace ModManagerCommon
 
 				string hash = GetFileHash(f);
 
-				args = new FileHashEventArgs(relativePath, i, fileIndex.Count);
+				args = new FileHashEventArgs(relativePath, index, fileIndex.Count);
 				OnFileHashEnd(args);
 
 				if (args.Cancel)
@@ -109,19 +148,14 @@ namespace ModManagerCommon
 					return null;
 				}
 
-				result.Add(new ModManifest
-				{
-					FilePath = relativePath,
-					FileSize = file.Length,
-					Checksum = hash
-				});
+				result.Add(new ModManifestEntry(relativePath, file.Length, hash));
 			}
 
 			return result;
 		}
 
 		/// <summary>
-		/// Follows symbolic links.
+		/// Follows symbolic links and constructs a <see cref="FileInfo"/> of the actual file.
 		/// </summary>
 		/// <param name="path">Path to the file.</param>
 		/// <returns>The <seealso cref="FileInfo"/> of the real file.</returns>
@@ -153,19 +187,26 @@ namespace ModManagerCommon
 			return file;
 		}
 
-		public static List<ModManifestDiff> Diff(List<ModManifest> newManifest, List<ModManifest> oldManifest)
+		/// <summary>
+		/// Generates a diff of two mod manifests.
+		/// </summary>
+		/// <param name="newManifest">The new manifest.</param>
+		/// <param name="oldManifest">The old manifest.</param>
+		/// <returns>A list of <see cref="ModManifestDiff"/> containing change information.</returns>
+		public static List<ModManifestDiff> Diff(List<ModManifestEntry> newManifest, List<ModManifestEntry> oldManifest)
 		{
 			// TODO: handle copies instead of moves to reduce download requirements (or cache downloads by hash?)
 
 			var result = new List<ModManifestDiff>();
 
-			List<ModManifest> old = oldManifest != null && oldManifest.Count > 0
-				? new List<ModManifest>(oldManifest) : new List<ModManifest>();
+			List<ModManifestEntry> old = oldManifest != null && oldManifest.Count > 0
+				? new List<ModManifestEntry>(oldManifest)
+				: new List<ModManifestEntry>();
 
-			foreach (ModManifest entry in newManifest)
+			foreach (ModManifestEntry entry in newManifest)
 			{
 				// First, check for an exact match. File path/name, hash, size; everything.
-				ModManifest exact = old.FirstOrDefault(x => Equals(x, entry));
+				ModManifestEntry exact = old.FirstOrDefault(x => Equals(x, entry));
 				if (exact != null)
 				{
 					old.Remove(exact);
@@ -174,13 +215,13 @@ namespace ModManagerCommon
 				}
 
 				// There's no exact match, so let's search by checksum.
-				List<ModManifest> checksum = old.Where(x => x.Checksum.Equals(entry.Checksum, StringComparison.InvariantCultureIgnoreCase)).ToList();
+				List<ModManifestEntry> checksum = old.Where(x => x.Checksum.Equals(entry.Checksum, StringComparison.InvariantCultureIgnoreCase)).ToList();
 
 				// If we've found matching checksums, we then need to check
 				// the file path to see if it's been moved.
 				if (checksum.Count > 0)
 				{
-					foreach (ModManifest c in checksum)
+					foreach (ModManifestEntry c in checksum)
 					{
 						old.Remove(c);
 					}
@@ -195,7 +236,7 @@ namespace ModManagerCommon
 
 				// If we've made it here, there's no matching checksums, so let's search
 				// for matching paths. If a path matches, the file has been modified.
-				ModManifest nameMatch = old.FirstOrDefault(x => x.FilePath.Equals(entry.FilePath, StringComparison.InvariantCultureIgnoreCase));
+				ModManifestEntry nameMatch = old.FirstOrDefault(x => x.FilePath.Equals(entry.FilePath, StringComparison.InvariantCultureIgnoreCase));
 				if (nameMatch != null)
 				{
 					old.Remove(nameMatch);
@@ -216,18 +257,24 @@ namespace ModManagerCommon
 			return result;
 		}
 
-		public List<ModManifestDiff> Verify(string modPath, List<ModManifest> manifest)
+		/// <summary>
+		/// Verifies the integrity of a mod against a mod manifest.
+		/// </summary>
+		/// <param name="modPath">Path to the mod to verify.</param>
+		/// <param name="manifest">Manifest to check against.</param>
+		/// <returns>A list of <see cref="ModManifestDiff"/> containing change information.</returns>
+		public List<ModManifestDiff> Verify(string modPath, List<ModManifestEntry> manifest)
 		{
 			var result = new List<ModManifestDiff>();
-			int i = 0;
+			int index = 0;
 
-			foreach (var m in manifest)
+			foreach (ModManifestEntry m in manifest)
 			{
-				var filePath = Path.Combine(modPath, m.FilePath);
+				string filePath = Path.Combine(modPath, m.FilePath);
 
-				++i;
+				++index;
 
-				var args = new FileHashEventArgs(m.FilePath, i, manifest.Count);
+				var args = new FileHashEventArgs(m.FilePath, index, manifest.Count);
 				OnFileHashStart(args);
 
 				if (args.Cancel)
@@ -272,7 +319,7 @@ namespace ModManagerCommon
 				}
 				finally
 				{
-					args = new FileHashEventArgs(m.FilePath, i, manifest.Count);
+					args = new FileHashEventArgs(m.FilePath, index, manifest.Count);
 					OnFileHashEnd(args);
 				}
 
@@ -285,7 +332,12 @@ namespace ModManagerCommon
 			return result;
 		}
 
-		public static string GetFileHash(string f)
+		/// <summary>
+		/// Computes a SHA-256 hash of a given file
+		/// </summary>
+		/// <param name="filePath">Path to the file to hash.</param>
+		/// <returns>Lowercase string representation of the hash.</returns>
+		public static string GetFileHash(string filePath)
 		{
 			byte[] hash;
 			SHA256 sha;
@@ -302,7 +354,7 @@ namespace ModManagerCommon
 
 			using (sha)
 			{
-				using (FileStream stream = File.OpenRead(f))
+				using (FileStream stream = File.OpenRead(filePath))
 				{
 					hash = sha.ComputeHash(stream);
 				}
@@ -327,18 +379,75 @@ namespace ModManagerCommon
 		}
 	}
 
-	public class ModManifest
+	public static class ModManifest
 	{
-		public string FilePath;
-		public long FileSize;
-		public string Checksum;
+		/// <summary>
+		/// Produces a mod manifest from a file.
+		/// </summary>
+		/// <param name="filePath">The path to the mod manifest file.</param>
+		/// <returns>List of <see cref="ModManifestEntry"/></returns>
+		public static List<ModManifestEntry> FromFile(string filePath)
+		{
+			string[] lines = File.ReadAllLines(filePath);
+			return lines.Select(line => new ModManifestEntry(line)).ToList();
+		}
 
-		public ModManifest(string line)
+		/// <summary>
+		/// Parses a mod manifest file in string form and produces a mod manifest.
+		/// </summary>
+		/// <param name="str">The mod manifest file string to parse.</param>
+		/// <returns>List of <see cref="ModManifestEntry"/></returns>
+		public static List<ModManifestEntry> FromString(string str)
+		{
+			string[] lines = str.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+			return lines.Select(line => new ModManifestEntry(line)).ToList();
+		}
+
+		/// <summary>
+		/// Writes a mod manifest to a file.
+		/// </summary>
+		/// <param name="manifest">The manifest to write.</param>
+		/// <param name="filePath">The file to write the manifest to.</param>
+		public static void ToFile(IEnumerable<ModManifestEntry> manifest, string filePath)
+		{
+			File.WriteAllLines(filePath, manifest.Select(x => x.ToString()));
+		}
+	}
+
+	/// <summary>
+	/// An entry in a mod manifest describing a file's path, size, and checksum.
+	/// </summary>
+	public class ModManifestEntry
+	{
+		/// <summary>
+		/// The name/path of the file relative to the root of the mod directory.
+		/// </summary>
+		public readonly string FilePath;
+		/// <summary>
+		/// The size of the file in bytes.
+		/// </summary>
+		public readonly long FileSize;
+		/// <summary>
+		/// String representation of the SHA-256 checksum of the file.
+		/// </summary>
+		public readonly string Checksum;
+
+		/// <summary>
+		/// Parses a line from a mod manifest line and constructs a <see cref="ModManifestEntry"/> .
+		/// </summary>
+		/// <param name="line">
+		/// The line to parse.
+		/// Each field of the line must be separated by tab (\t) and contain 3 fields total.
+		/// Expected format is: [name]\t[size]\t[checksum]
+		/// </param>
+		/// <exception cref="ArgumentException">Thrown when an invalid number of fields parsed from the line.</exception>
+		/// <exception cref="Exception">Thrown when an absolute path is provided, or parent directory traversal was attempted ("..\").</exception>
+		public ModManifestEntry(string line)
 		{
 			string[] fields = line.Split('\t');
 			if (fields.Length != 3)
 			{
-				throw new ArgumentException($"Manifest line must have 3 fields. Provided: { fields.Length }", nameof(line));
+				throw new ArgumentException($"Manifest line must have 3 fields. Provided: {fields.Length}", nameof(line));
 			}
 
 			FilePath = fields[0];
@@ -350,34 +459,22 @@ namespace ModManagerCommon
 				throw new Exception($"Absolute paths are forbidden: {FilePath}");
 			}
 
-			if (FilePath.StartsWith(@"..\") || FilePath.Contains(@"\..\"))
+			if (FilePath.StartsWith(@"..\", StringComparison.Ordinal) || FilePath.Contains(@"\..\"))
 			{
 				throw new Exception($"Parent directory traversal is forbidden: {FilePath}");
 			}
 		}
 
-		public ModManifest() {}
-
-		public static List<ModManifest> FromFile(string filePath)
+		public ModManifestEntry(string filePath, long fileSize, string checksum)
 		{
-			string[] lines = File.ReadAllLines(filePath);
-			return lines.Select(line => new ModManifest(line)).ToList();
-		}
-
-		public static List<ModManifest> FromString(string str)
-		{
-			string[] lines = str.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-			return lines.Select(line => new ModManifest(line)).ToList();
-		}
-
-		public static void ToFile(IEnumerable<ModManifest> manifest, string path)
-		{
-			File.WriteAllLines(path, manifest.Select(x => x.ToString()));
+			FilePath = filePath;
+			FileSize = fileSize;
+			Checksum = checksum;
 		}
 
 		public override string ToString()
 		{
-			return $"{ FilePath }\t{ FileSize }\t{ Checksum }";
+			return $"{FilePath}\t{FileSize}\t{Checksum}";
 		}
 
 		public override bool Equals(object obj)
@@ -387,20 +484,25 @@ namespace ModManagerCommon
 				return true;
 			}
 
-			var m = obj as ModManifest;
-			if (m == null)
+			if (!(obj is ModManifestEntry m))
 			{
 				return false;
 			}
 
-			return FileSize == m.FileSize
-				&& FilePath.Equals(m.FilePath, StringComparison.InvariantCultureIgnoreCase)
-				&& Checksum.Equals(m.Checksum, StringComparison.InvariantCultureIgnoreCase);
+			return FileSize == m.FileSize &&
+			       FilePath.Equals(m.FilePath, StringComparison.OrdinalIgnoreCase) &&
+			       Checksum.Equals(m.Checksum, StringComparison.OrdinalIgnoreCase);
 		}
 
 		public override int GetHashCode()
 		{
-			return 1;
+			unchecked
+			{
+				int hashCode = FilePath?.GetHashCode() ?? 0;
+				hashCode = (hashCode * 397) ^ FileSize.GetHashCode();
+				hashCode = (hashCode * 397) ^ (Checksum?.GetHashCode() ?? 0);
+				return hashCode;
+			}
 		}
 	}
 }

@@ -11,7 +11,14 @@ namespace ModManagerCommon
 {
 	public enum ModDownloadType
 	{
+		/// <summary>
+		/// The mod is contained in a single archive file.
+		/// </summary>
 		Archive,
+		/// <summary>
+		/// The mod is hosted in a directory tree with
+		/// individually accessible files.
+		/// </summary>
 		Modular
 	}
 
@@ -19,10 +26,10 @@ namespace ModManagerCommon
 	{
 		private readonly DownloadProgressChangedEventArgs args;
 
-		public int ProgressPercentage => args.ProgressPercentage;
-		public object UserState => args.UserState;
-		public long BytesReceived => args.BytesReceived;
-		public long TotalBytesToReceive => args.TotalBytesToReceive;
+		public int    ProgressPercentage  => args.ProgressPercentage;
+		public object UserState           => args.UserState;
+		public long   BytesReceived       => args.BytesReceived;
+		public long   TotalBytesToReceive => args.TotalBytesToReceive;
 
 		public int FileDownloading { get; }
 		public int FilesToDownload { get; }
@@ -47,11 +54,11 @@ namespace ModManagerCommon
 		public int FilesToDownload { get; }
 		public List<ModManifestDiff> ChangedFiles { get; }
 
-		public string HomePage = string.Empty;
-		public string Name = string.Empty;
-		public string Version = string.Empty;
-		public string Published = string.Empty;
-		public string Updated = string.Empty;
+		public string HomePage   = string.Empty;
+		public string Name       = string.Empty;
+		public string Version    = string.Empty;
+		public string Published  = string.Empty;
+		public string Updated    = string.Empty;
 		public string ReleaseUrl = string.Empty;
 
 		public event CancelEventHandler DownloadStarted;
@@ -72,12 +79,12 @@ namespace ModManagerCommon
 		/// <seealso cref="ModDownloadType"/>
 		public ModDownload(ModInfo info, string folder, string url, string changes, long size)
 		{
-			Info = info;
-			Type = ModDownloadType.Archive;
-			Url = url;
-			Folder = folder;
-			Changes = changes;
-			Size = size;
+			Info            = info;
+			Type            = ModDownloadType.Archive;
+			Url             = url;
+			Folder          = folder;
+			Changes         = changes;
+			Size            = size;
 			FilesToDownload = 1;
 		}
 
@@ -92,10 +99,11 @@ namespace ModManagerCommon
 		/// <seealso cref="ModDownloadType"/>
 		public ModDownload(ModInfo info, string folder, string url, string changes, List<ModManifestDiff> diff)
 		{
-			Info = info;
-			Type = ModDownloadType.Modular;
-			Url = url;
+			Info   = info;
+			Type   = ModDownloadType.Modular;
+			Url    = url;
 			Folder = folder;
+
 			ChangedFiles = diff?.Where(x => x.State != ModManifestState.Unchanged).ToList()
 				?? throw new ArgumentNullException(nameof(diff));
 
@@ -109,6 +117,11 @@ namespace ModManagerCommon
 			Changes = !string.IsNullOrEmpty(changes) ? changes : string.Empty;
 		}
 
+		/// <summary>
+		/// Downloads files required for updating according to <see cref="Type"/>.
+		/// </summary>
+		/// <param name="client"><see cref="WebClient"/> to be used for downloading.</param>
+		/// <param name="updatePath">Path to store downloaded files.</param>
 		public void Download(WebClient client, string updatePath)
 		{
 			var cancelArgs = new CancelEventArgs(false);
@@ -116,7 +129,7 @@ namespace ModManagerCommon
 
 			int fileDownloading = 0;
 
-			void DownloadComplete(object sender, AsyncCompletedEventArgs args)
+			void downloadComplete(object sender, AsyncCompletedEventArgs args)
 			{
 				lock (args.UserState)
 				{
@@ -124,7 +137,7 @@ namespace ModManagerCommon
 				}
 			}
 
-			void DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs args)
+			void downloadProgressChanged(object sender, DownloadProgressChangedEventArgs args)
 			{
 				downloadArgs = new DownloadProgressEventArgs(args, fileDownloading, FilesToDownload);
 				if (OnDownloadProgress(downloadArgs))
@@ -136,322 +149,343 @@ namespace ModManagerCommon
 			switch (Type)
 			{
 				case ModDownloadType.Archive:
+				{
+					var uri = new Uri(Url);
+					if (!uri.Host.EndsWith("github.com", StringComparison.OrdinalIgnoreCase))
 					{
-						var uri = new Uri(Url);
-						if (!uri.Host.EndsWith("github.com"))
+						var request = (HttpWebRequest)WebRequest.Create(uri);
+						request.Method = "HEAD";
+						var response = (HttpWebResponse)request.GetResponse();
+						uri = response.ResponseUri;
+						response.Close();
+					}
+
+					string filePath = Path.Combine(updatePath, uri.Segments.Last());
+
+					var info = new FileInfo(filePath);
+					if (info.Exists && info.Length == Size)
+					{
+						if (OnDownloadCompleted(cancelArgs))
 						{
-							HttpWebRequest req = (HttpWebRequest)WebRequest.Create(uri);
-							req.Method = "HEAD";
-							HttpWebResponse res = (HttpWebResponse)req.GetResponse();
-							uri = res.ResponseUri;
-							res.Close();
+							return;
 						}
-						string filePath = Path.Combine(updatePath, uri.Segments.Last());
-
-						var info = new FileInfo(filePath);
-						if (info.Exists && info.Length == Size)
-						{
-							if (OnDownloadCompleted(cancelArgs))
-							{
-								return;
-							}
-						}
-						else
-						{
-							if (OnDownloadStarted(cancelArgs))
-							{
-								return;
-							}
-
-							client.DownloadFileCompleted += DownloadComplete;
-							client.DownloadProgressChanged += DownloadProgressChanged;
-							++fileDownloading;
-
-							var sync = new object();
-							lock (sync)
-							{
-								client.DownloadFileAsync(uri, filePath, sync);
-								Monitor.Wait(sync);
-							}
-
-							client.DownloadProgressChanged -= DownloadProgressChanged;
-							client.DownloadFileCompleted -= DownloadComplete;
-
-							if (cancelArgs.Cancel || downloadArgs?.Cancel == true)
-							{
-								return;
-							}
-
-							if (OnDownloadCompleted(cancelArgs))
-							{
-								return;
-							}
-						}
-
-						string dataDir = Path.Combine(updatePath, Path.GetFileNameWithoutExtension(filePath));
-						if (!Directory.Exists(dataDir))
-						{
-							Directory.CreateDirectory(dataDir);
-						}
-
-						if (OnExtracting(cancelArgs))
+					}
+					else
+					{
+						if (OnDownloadStarted(cancelArgs))
 						{
 							return;
 						}
 
-						Process.Start(new ProcessStartInfo("7z.exe", $"x -aoa -o\"{dataDir}\" \"{filePath}\"") { UseShellExecute = false, CreateNoWindow = true }).WaitForExit();
+						client.DownloadFileCompleted   += downloadComplete;
+						client.DownloadProgressChanged += downloadProgressChanged;
+						++fileDownloading;
 
-						string workDir = Path.GetDirectoryName(ModInfo.GetModFiles(new DirectoryInfo(dataDir)).FirstOrDefault());
-
-						if (string.IsNullOrEmpty(workDir))
+						var sync = new object();
+						lock (sync)
 						{
-							throw new DirectoryNotFoundException("Unable to locate mod.ini in " + dataDir);
+							client.DownloadFileAsync(uri, filePath, sync);
+							Monitor.Wait(sync);
 						}
 
-						string newManPath = Path.Combine(workDir, "mod.manifest");
-						string oldManPath = Path.Combine(Folder, "mod.manifest");
+						client.DownloadProgressChanged -= downloadProgressChanged;
+						client.DownloadFileCompleted   -= downloadComplete;
 
-						if (OnParsingManifest(cancelArgs))
-						{
-							return;
-						}
-
-						if (!File.Exists(newManPath) || !File.Exists(oldManPath))
-						{
-							CopyDirectory(new DirectoryInfo(workDir), Directory.CreateDirectory(Folder));
-							Directory.Delete(dataDir, true);
-							if (File.Exists(filePath))
-								File.Delete(filePath);
-							return;
-						}
-
-						if (OnParsingManifest(cancelArgs))
+						if (cancelArgs.Cancel || downloadArgs?.Cancel == true)
 						{
 							return;
 						}
 
-						List<ModManifest> newManifest = ModManifest.FromFile(newManPath);
-
-						if (OnApplyingManifest(cancelArgs))
+						if (OnDownloadCompleted(cancelArgs))
 						{
 							return;
 						}
+					}
 
-						List<ModManifest> oldManifest = ModManifest.FromFile(oldManPath);
-						List<string> oldFiles = oldManifest.Except(newManifest)
-							.Select(x => Path.Combine(Folder, x.FilePath))
-							.ToList();
+					string dataDir = Path.Combine(updatePath, Path.GetFileNameWithoutExtension(filePath));
+					if (!Directory.Exists(dataDir))
+					{
+						Directory.CreateDirectory(dataDir);
+					}
 
-						foreach (string file in oldFiles)
+					if (OnExtracting(cancelArgs))
+					{
+						return;
+					}
+
+					Process process = Process.Start(
+						new ProcessStartInfo("7z.exe", $"x -aoa -o\"{dataDir}\" \"{filePath}\"")
 						{
-							if (File.Exists(file))
-							{
-								File.Delete(file);
-							}
-						}
+							UseShellExecute = false,
+							CreateNoWindow  = true
+						});
 
-						RemoveEmptyDirectories(oldManifest, newManifest);
+					if (process != null)
+					{
+						process.WaitForExit();
+					}
+					else
+					{
+						throw new NullReferenceException("Failed to create 7z process");
+					}
 
-						foreach (ModManifest file in newManifest)
-						{
-							string dir = Path.GetDirectoryName(file.FilePath);
-							if (!string.IsNullOrEmpty(dir))
-							{
-								string newDir = Path.Combine(Folder, dir);
-								if (!Directory.Exists(newDir))
-								{
-									Directory.CreateDirectory(newDir);
-								}
-							}
+					string workDir = Path.GetDirectoryName(ModInfo.GetModFiles(new DirectoryInfo(dataDir)).FirstOrDefault());
 
-							string dest = Path.Combine(Folder, file.FilePath);
+					if (string.IsNullOrEmpty(workDir))
+					{
+						throw new DirectoryNotFoundException($"Unable to locate mod.ini in \"{dataDir}\"");
+					}
 
-							if (File.Exists(dest))
-							{
-								File.Delete(dest);
-							}
+					string newManPath = Path.Combine(workDir, "mod.manifest");
+					string oldManPath = Path.Combine(Folder,  "mod.manifest");
 
-							File.Move(Path.Combine(workDir, file.FilePath), dest);
-						}
+					if (OnParsingManifest(cancelArgs))
+					{
+						return;
+					}
 
-						File.Copy(newManPath, oldManPath, true);
+					if (!File.Exists(newManPath) || !File.Exists(oldManPath))
+					{
+						CopyDirectory(new DirectoryInfo(workDir), Directory.CreateDirectory(Folder));
 						Directory.Delete(dataDir, true);
-						File.WriteAllText(Path.Combine(Folder, "mod.version"), Updated);
 
 						if (File.Exists(filePath))
 						{
 							File.Delete(filePath);
 						}
-						break;
+
+						return;
 					}
 
-				case ModDownloadType.Modular:
+					if (OnParsingManifest(cancelArgs))
 					{
-						// First let's download all the new stuff.
-						List<ModManifestDiff> newEntries = ChangedFiles
-							.Where(x => x.State == ModManifestState.Added || x.State == ModManifestState.Changed)
-							.ToList();
+						return;
+					}
 
-						var uri = new Uri(Url);
-						string tempDir = Path.Combine(updatePath, uri.Segments.Last());
+					List<ModManifestEntry> newManifest = ModManifest.FromFile(newManPath);
 
-						if (!Directory.Exists(tempDir))
+					if (OnApplyingManifest(cancelArgs))
+					{
+						return;
+					}
+
+					List<ModManifestEntry> oldManifest = ModManifest.FromFile(oldManPath);
+					List<string> oldFiles = oldManifest.Except(newManifest)
+						.Select(x => Path.Combine(Folder, x.FilePath))
+						.ToList();
+
+					foreach (string file in oldFiles)
+					{
+						if (File.Exists(file))
 						{
-							Directory.CreateDirectory(tempDir);
+							File.Delete(file);
 						}
+					}
 
-						var sync = new object();
+					RemoveEmptyDirectories(oldManifest, newManifest);
 
-						foreach (ModManifestDiff i in newEntries)
+					foreach (ModManifestEntry file in newManifest)
+					{
+						string dir = Path.GetDirectoryName(file.FilePath);
+						if (!string.IsNullOrEmpty(dir))
 						{
-							string filePath = Path.Combine(tempDir, i.Current.FilePath);
-							string dir = Path.GetDirectoryName(filePath);
-
-							if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+							string newDir = Path.Combine(Folder, dir);
+							if (!Directory.Exists(newDir))
 							{
-								Directory.CreateDirectory(dir);
-							}
-
-							if (OnDownloadStarted(cancelArgs))
-							{
-								return;
-							}
-
-							var info = new FileInfo(filePath);
-							++fileDownloading;
-
-							if (!info.Exists || info.Length != i.Current.FileSize
-								|| !i.Current.Checksum.Equals(ModManifestGenerator.GetFileHash(filePath), StringComparison.InvariantCultureIgnoreCase))
-							{
-								client.DownloadFileCompleted += DownloadComplete;
-								client.DownloadProgressChanged += DownloadProgressChanged;
-
-								lock (sync)
-								{
-									client.DownloadFileAsync(new Uri(uri, i.Current.FilePath), filePath, sync);
-									Monitor.Wait(sync);
-								}
-
-								client.DownloadProgressChanged -= DownloadProgressChanged;
-								client.DownloadFileCompleted -= DownloadComplete;
-
-								info.Refresh();
-
-								if (info.Length != i.Current.FileSize)
-								{
-									throw new Exception(string.Format("Size of downloaded file \"{0}\" ({1}) differs from manifest ({2}).",
-										i.Current.FilePath, SizeSuffix.GetSizeSuffix(info.Length), SizeSuffix.GetSizeSuffix(i.Current.FileSize)));
-								}
-
-								var hash = ModManifestGenerator.GetFileHash(filePath);
-								if (!i.Current.Checksum.Equals(hash, StringComparison.InvariantCultureIgnoreCase))
-								{
-									throw new Exception(string.Format("Checksum of downloaded file \"{0}\" ({1}) differs from manifest ({2}).",
-										i.Current.FilePath, hash, i.Current.Checksum));
-								}
-							}
-
-							if (cancelArgs.Cancel || downloadArgs?.Cancel == true)
-							{
-								return;
-							}
-
-							if (OnDownloadCompleted(cancelArgs))
-							{
-								return;
+								Directory.CreateDirectory(newDir);
 							}
 						}
 
-						client.DownloadFileCompleted += DownloadComplete;
-						lock (sync)
+						string dest = Path.Combine(Folder, file.FilePath);
+
+						if (File.Exists(dest))
 						{
-							client.DownloadFileAsync(new Uri(uri, "mod.manifest"), Path.Combine(tempDir, "mod.manifest"), sync);
-							Monitor.Wait(sync);
+							File.Delete(dest);
 						}
-						client.DownloadFileCompleted -= DownloadComplete;
 
-						// Now handle all file operations except where removals are concerned.
-						List<ModManifestDiff> movedEntries = ChangedFiles.Except(newEntries)
-							.Where(x => x.State == ModManifestState.Moved)
-							.ToList();
+						File.Move(Path.Combine(workDir, file.FilePath), dest);
+					}
 
-						if (OnApplyingManifest(cancelArgs))
+					File.Copy(newManPath, oldManPath, true);
+					Directory.Delete(dataDir, true);
+					File.WriteAllText(Path.Combine(Folder, "mod.version"), Updated);
+
+					if (File.Exists(filePath))
+					{
+						File.Delete(filePath);
+					}
+
+					break;
+				}
+
+				case ModDownloadType.Modular:
+				{
+					List<ModManifestDiff> newEntries = ChangedFiles
+						.Where(x => x.State == ModManifestState.Added || x.State == ModManifestState.Changed)
+						.ToList();
+
+					var uri = new Uri(Url);
+					string tempDir = Path.Combine(updatePath, uri.Segments.Last());
+
+					if (!Directory.Exists(tempDir))
+					{
+						Directory.CreateDirectory(tempDir);
+					}
+
+					var sync = new object();
+
+					foreach (ModManifestDiff i in newEntries)
+					{
+						string filePath = Path.Combine(tempDir, i.Current.FilePath);
+						string dir = Path.GetDirectoryName(filePath);
+
+						if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+						{
+							Directory.CreateDirectory(dir);
+						}
+
+						if (OnDownloadStarted(cancelArgs))
 						{
 							return;
 						}
 
-						// Handle existing entries marked as moved.
-						foreach (ModManifestDiff i in movedEntries)
+						var info = new FileInfo(filePath);
+						++fileDownloading;
+
+						if (!info.Exists || info.Length != i.Current.FileSize ||
+						    !i.Current.Checksum.Equals(ModManifestGenerator.GetFileHash(filePath), StringComparison.OrdinalIgnoreCase))
 						{
-							ModManifest old = i.Last;
-							// This would be considered an error...
-							if (old == null)
+							client.DownloadFileCompleted   += downloadComplete;
+							client.DownloadProgressChanged += downloadProgressChanged;
+
+							lock (sync)
 							{
-								continue;
+								client.DownloadFileAsync(new Uri(uri, i.Current.FilePath), filePath, sync);
+								Monitor.Wait(sync);
 							}
 
-							string oldPath = Path.Combine(Folder, old.FilePath);
-							string newPath = Path.Combine(tempDir, i.Current.FilePath);
+							client.DownloadProgressChanged -= downloadProgressChanged;
+							client.DownloadFileCompleted   -= downloadComplete;
 
-							string dir = Path.GetDirectoryName(newPath);
+							info.Refresh();
 
-							if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+							if (info.Length != i.Current.FileSize)
 							{
-								Directory.CreateDirectory(dir);
+								throw new Exception(string.Format("Size of downloaded file \"{0}\" ({1}) differs from manifest ({2}).",
+									i.Current.FilePath, SizeSuffix.GetSizeSuffix(info.Length), SizeSuffix.GetSizeSuffix(i.Current.FileSize)));
 							}
 
-							File.Copy(oldPath, newPath, true);
-						}
-
-						// Now move the stuff from the temporary folder over to the working directory.
-						foreach (ModManifestDiff i in newEntries.Concat(movedEntries))
-						{
-							string tempPath = Path.Combine(tempDir, i.Current.FilePath);
-							string workPath = Path.Combine(Folder, i.Current.FilePath);
-							string dir = Path.GetDirectoryName(workPath);
-
-							if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+							string hash = ModManifestGenerator.GetFileHash(filePath);
+							if (!i.Current.Checksum.Equals(hash, StringComparison.OrdinalIgnoreCase))
 							{
-								Directory.CreateDirectory(dir);
+								throw new Exception(string.Format("Checksum of downloaded file \"{0}\" ({1}) differs from manifest ({2}).",
+									i.Current.FilePath, hash, i.Current.Checksum));
 							}
-
-							File.Copy(tempPath, workPath, true);
 						}
 
-						// Once that has succeeded we can safely delete files that have been marked for removal.
-						List<ModManifestDiff> removedEntries = ChangedFiles
-							.Where(x => x.State == ModManifestState.Removed)
-							.ToList();
-
-						foreach (string path in removedEntries.Select(i => Path.Combine(Folder, i.Current.FilePath)).Where(File.Exists))
+						if (cancelArgs.Cancel || downloadArgs?.Cancel == true)
 						{
-							File.Delete(path);
+							return;
 						}
 
-						// Same for files that have been moved.
-						foreach (string path in movedEntries
-							.Where(x => newEntries.All(y => y.Current.FilePath != x.Last.FilePath))
-							.Select(i => Path.Combine(Folder, i.Last.FilePath)).Where(File.Exists))
+						if (OnDownloadCompleted(cancelArgs))
 						{
-							File.Delete(path);
+							return;
 						}
-
-						string oldManPath = Path.Combine(Folder, "mod.manifest");
-						string newManPath = Path.Combine(tempDir, "mod.manifest");
-
-						if (File.Exists(oldManPath))
-						{
-							List<ModManifest> oldManifest = ModManifest.FromFile(oldManPath);
-							List<ModManifest> newManifest = ModManifest.FromFile(newManPath);
-
-							// Remove directories that are now empty.
-							RemoveEmptyDirectories(oldManifest, newManifest);
-						}
-
-						// And last but not least, copy over the new manifest.
-						File.Copy(newManPath, oldManPath, true);
-						break;
 					}
+
+					client.DownloadFileCompleted += downloadComplete;
+					lock (sync)
+					{
+						client.DownloadFileAsync(new Uri(uri, "mod.manifest"), Path.Combine(tempDir, "mod.manifest"), sync);
+						Monitor.Wait(sync);
+					}
+
+					client.DownloadFileCompleted -= downloadComplete;
+
+					// Handle all non-removal file operations (move, rename)
+					List<ModManifestDiff> movedEntries = ChangedFiles.Except(newEntries)
+						.Where(x => x.State == ModManifestState.Moved)
+						.ToList();
+
+					if (OnApplyingManifest(cancelArgs))
+					{
+						return;
+					}
+
+					// Handle existing entries marked as moved.
+					foreach (ModManifestDiff i in movedEntries)
+					{
+						ModManifestEntry old = i.Last;
+
+						// This would be considered an error...
+						if (old == null)
+						{
+							continue;
+						}
+
+						string oldPath = Path.Combine(Folder,  old.FilePath);
+						string newPath = Path.Combine(tempDir, i.Current.FilePath);
+
+						string dir = Path.GetDirectoryName(newPath);
+
+						if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+						{
+							Directory.CreateDirectory(dir);
+						}
+
+						File.Copy(oldPath, newPath, true);
+					}
+
+					// Now move the stuff from the temporary folder over to the working directory.
+					foreach (ModManifestDiff i in newEntries.Concat(movedEntries))
+					{
+						string tempPath = Path.Combine(tempDir, i.Current.FilePath);
+						string workPath = Path.Combine(Folder,  i.Current.FilePath);
+						string dir      = Path.GetDirectoryName(workPath);
+
+						if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+						{
+							Directory.CreateDirectory(dir);
+						}
+
+						File.Copy(tempPath, workPath, true);
+					}
+
+					// Once that has succeeded we can safely delete files that have been marked for removal.
+					List<ModManifestDiff> removedEntries = ChangedFiles
+						.Where(x => x.State == ModManifestState.Removed)
+						.ToList();
+
+					foreach (string path in removedEntries.Select(i => Path.Combine(Folder, i.Current.FilePath)).Where(File.Exists))
+					{
+						File.Delete(path);
+					}
+
+					// Same for files that have been moved.
+					foreach (string path in movedEntries
+						.Where(x => newEntries.All(y => y.Current.FilePath != x.Last.FilePath))
+						.Select(i => Path.Combine(Folder, i.Last.FilePath)).Where(File.Exists))
+					{
+						File.Delete(path);
+					}
+
+					string oldManPath = Path.Combine(Folder,  "mod.manifest");
+					string newManPath = Path.Combine(tempDir, "mod.manifest");
+
+					if (File.Exists(oldManPath))
+					{
+						List<ModManifestEntry> oldManifest = ModManifest.FromFile(oldManPath);
+						List<ModManifestEntry> newManifest = ModManifest.FromFile(newManPath);
+
+						// Remove directories that are now empty.
+						RemoveEmptyDirectories(oldManifest, newManifest);
+					}
+
+					// And last but not least, copy over the new manifest.
+					File.Copy(newManPath, oldManPath, true);
+					break;
+				}
 
 				default:
 					throw new ArgumentOutOfRangeException();
@@ -461,12 +495,17 @@ namespace ModManagerCommon
 		private void CopyDirectory(DirectoryInfo oldDir, DirectoryInfo newDir)
 		{
 			foreach (DirectoryInfo dir in oldDir.EnumerateDirectories())
+			{
 				CopyDirectory(dir, newDir.CreateSubdirectory(dir.Name));
+			}
+
 			foreach (FileInfo file in oldDir.EnumerateFiles())
+			{
 				file.CopyTo(Path.Combine(newDir.FullName, file.Name), true);
+			}
 		}
 
-		private void RemoveEmptyDirectories(IEnumerable<ModManifest> oldManifest, IEnumerable<ModManifest> newManifest)
+		private void RemoveEmptyDirectories(IEnumerable<ModManifestEntry> oldManifest, IEnumerable<ModManifestEntry> newManifest)
 		{
 			// Grab all directories that exist only in the old manifest.
 			var directories = new HashSet<string>
@@ -479,7 +518,7 @@ namespace ModManagerCommon
 			);
 
 			// ok delete them thx
-			foreach (var dir in directories.Select(x => Path.Combine(Folder, x)))
+			foreach (string dir in directories.Select(x => Path.Combine(Folder, x)))
 			{
 				if (Directory.Exists(dir))
 				{

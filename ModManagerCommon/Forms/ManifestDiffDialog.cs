@@ -35,9 +35,9 @@ namespace ModManagerCommon.Forms
 			listDiff.EndUpdate();
 		}
 
-		public List<ModManifest> MakeNewManifest()
+		public List<ModManifestEntry> MakeNewManifest()
 		{
-			var result = new List<ModManifest>();
+			var result = new List<ModManifestEntry>();
 
 			result.AddRange(listDiff.Items.Cast<ListViewItem>().Where(x => x.Checked).Select(x => ((ModManifestDiff)x.Tag).Current));
 			result.AddRange(diff.Where(x => x.State == ModManifestState.Unchanged).Select(x => x.Current));

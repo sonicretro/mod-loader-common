@@ -66,7 +66,7 @@ namespace ModManagerCommon.Forms
 					SetTaskAndStep($"Verifying mod {++modIndex}/{modCount}: {info.Name}",
 						"Loading local manifest...");
 
-					List<ModManifest> local = ModManifest.FromFile(Path.Combine(path, "mod.manifest"));
+					List<ModManifestEntry> local = ModManifest.FromFile(Path.Combine(path, "mod.manifest"));
 					List<ModManifestDiff> diff = generator.Verify(path, local);
 
 					if (diff?.Any(x => x.State != ModManifestState.Unchanged) == true)

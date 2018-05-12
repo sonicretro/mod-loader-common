@@ -190,3 +190,4 @@ ModelManifest.xml
 *.db
 *.opendb
 /.vs/ModLoaderCommon/v15
+*.dtbcache
