@@ -23,8 +23,8 @@ class IniGroup
 
 		const std::unordered_map<std::string, std::string> *data(void) const;
 
-		std::string getString(const std::string &key, const std::string &def = "") const;
-		std::wstring getWString(const std::string &key, const std::wstring &def = L"") const;
+		std::string getString(const std::string &key, const std::string &def = std::string()) const;
+		std::wstring getWString(const std::string &key, const std::wstring &def = std::wstring()) const;
 		bool getBool(const std::string &key, bool def = false) const;
 		int getIntRadix(const std::string &key, int radix, int def = 0) const;
 		int getInt(const std::string &key, int def = 0) const;
@@ -77,8 +77,8 @@ class IniFile
 		bool hasKey(const std::string &section, const std::string &key) const;
 		bool hasKeyNonEmpty(const std::string &section, const std::string &key) const;
 
-		std::string getString(const std::string &section, const std::string &key, const std::string &def = "") const;
-		std::wstring getWString(const std::string &section, const std::string &key, const std::wstring &def = L"") const;
+		std::string getString(const std::string &section, const std::string &key, const std::string &def = std::string()) const;
+		std::wstring getWString(const std::string &section, const std::string &key, const std::wstring &def = std::wstring()) const;
 		bool getBool(const std::string &section, const std::string &key, bool def = false) const;
 		int getIntRadix(const std::string &section, const std::string &key, int radix, int def = 0) const;
 		int getInt(const std::string &section, const std::string &key, int def = 0) const;

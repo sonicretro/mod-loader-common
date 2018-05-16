@@ -87,10 +87,7 @@ bool IniGroup::getBool(const string &key, bool def) const
 	if (iter == m_data.end())
 		return def;
 
-	string value = iter->second;
-	transform(value.begin(), value.end(), value.begin(), ::tolower);
-	// TODO: Support integer values.
-	return (value == "true");
+	return (!stricmp(iter->second.c_str(), "true"));
 }
 
 /**
