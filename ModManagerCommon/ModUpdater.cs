@@ -116,8 +116,8 @@ namespace ModManagerCommon
 				HomePage   = "https://github.com/" + mod.GitHubRepo,
 				Name       = latestRelease.Name,
 				Version    = latestRelease.TagName,
-				Published  = latestRelease.Published,
-				Updated    = latestAsset.Uploaded,
+				Published  = DateTime.Parse(latestRelease.Published),
+				Updated    = DateTime.Parse(latestAsset.Uploaded),
 				ReleaseUrl = latestRelease.HtmlUrl
 			};
 		}
@@ -178,8 +178,8 @@ namespace ModManagerCommon
 				HomePage   = gbi.ProfileUrl,
 				Name       = latestUpdate.Title,
 				Version    = latestUpdate.Title,
-				Published  = latestUpdate.DateAdded.ToString(CultureInfo.CurrentCulture),
-				Updated    = latestUpdate.DateAdded.ToString(CultureInfo.CurrentCulture),
+				Published  = latestUpdate.DateAdded,
+				Updated    = latestUpdate.DateAdded,
 				ReleaseUrl = gbi.ProfileUrl
 			};
 		}

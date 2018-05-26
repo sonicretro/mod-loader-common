@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Windows.Forms;
 
 namespace ModManagerCommon.Controls
@@ -29,12 +30,12 @@ namespace ModManagerCommon.Controls
 			else
 			{
 				// Download details
-				labelDownloadPublished.Text = entry.Updated;
+				labelDownloadPublished.Text = entry.Updated.ToString(CultureInfo.CurrentCulture);
 				labelSize.Text              = SizeSuffix.GetSizeSuffix(entry.Size);
 				labelFileCount.Text         = entry.FilesToDownload.ToString();
 
 				// Release details
-				labelReleasePublished.Text = entry.Published;
+				labelReleasePublished.Text = entry.Published.ToString(CultureInfo.CurrentCulture);
 				linkRelease.Text           = entry.ReleaseUrl;
 				labelReleaseName.Text      = entry.Name;
 				labelReleaseTag.Text       = entry.Version;

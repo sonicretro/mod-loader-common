@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -54,12 +55,12 @@ namespace ModManagerCommon
 		public int FilesToDownload { get; }
 		public List<ModManifestDiff> ChangedFiles { get; }
 
-		public string HomePage   = string.Empty;
-		public string Name       = string.Empty;
-		public string Version    = string.Empty;
-		public string Published  = string.Empty;
-		public string Updated    = string.Empty;
-		public string ReleaseUrl = string.Empty;
+		public string   HomePage = string.Empty;
+		public string   Name     = string.Empty;
+		public string   Version  = string.Empty;
+		public DateTime Published;
+		public DateTime Updated;
+		public string   ReleaseUrl = string.Empty;
 
 		public event CancelEventHandler DownloadStarted;
 		public event EventHandler<DownloadProgressEventArgs> DownloadProgress;
@@ -308,7 +309,7 @@ namespace ModManagerCommon
 
 					File.Copy(newManPath, oldManPath, true);
 					Directory.Delete(dataDir, true);
-					File.WriteAllText(Path.Combine(Folder, "mod.version"), Updated);
+					File.WriteAllText(Path.Combine(Folder, "mod.version"), Updated.ToString(CultureInfo.InvariantCulture));
 
 					if (File.Exists(filePath))
 					{
