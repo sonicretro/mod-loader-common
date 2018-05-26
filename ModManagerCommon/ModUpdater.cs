@@ -15,8 +15,35 @@ namespace ModManagerCommon
 		private readonly Dictionary<string, List<GitHubRelease>> gitHubCache = new Dictionary<string, List<GitHubRelease>>();
 		public bool ForceUpdate;
 
-		public ModDownload GetGitHubReleases(ModInfo mod, string folder,
-			UpdaterWebClient client, List<string> errors)
+		private static DateTime? GetLocalVersion(string folder)
+		{
+			string versionPath = Path.Combine("mods", folder, "mod.version");
+			DateTime? localVersion = null;
+
+			if (File.Exists(versionPath))
+			{
+				string dateString = File.ReadAllText(versionPath).Trim();
+
+				if (DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date) ||
+				    DateTime.TryParse(dateString, CultureInfo.CurrentCulture, DateTimeStyles.None, out date))
+				{
+					localVersion = date;
+				}
+			}
+
+			if (!localVersion.HasValue)
+			{
+				var info = new FileInfo(Path.Combine("mods", folder, "mod.manifest"));
+				if (info.Exists)
+				{
+					localVersion = info.LastWriteTimeUtc;
+				}
+			}
+
+			return localVersion;
+		}
+
+		public ModDownload GetGitHubReleases(ModInfo mod, string folder, UpdaterWebClient client, List<string> errors)
 		{
 			List<GitHubRelease> releases;
 			string url = "https://api.github.com/repos/" + mod.GitHubRepo + "/releases";
@@ -52,21 +79,7 @@ namespace ModManagerCommon
 				return null;
 			}
 
-			string versionPath = Path.Combine("mods", folder, "mod.version");
-			DateTime? localVersion = null;
-
-			if (File.Exists(versionPath))
-			{
-				localVersion = DateTime.Parse(File.ReadAllText(versionPath).Trim());
-			}
-			else
-			{
-				var info = new FileInfo(Path.Combine("mods", folder, "mod.manifest"));
-				if (info.Exists)
-				{
-					localVersion = info.LastWriteTimeUtc;
-				}
-			}
+			DateTime? localVersion = GetLocalVersion(folder);
 
 			GitHubRelease latestRelease = null;
 			GitHubAsset latestAsset = null;
@@ -116,14 +129,13 @@ namespace ModManagerCommon
 				HomePage   = "https://github.com/" + mod.GitHubRepo,
 				Name       = latestRelease.Name,
 				Version    = latestRelease.TagName,
-				Published  = DateTime.Parse(latestRelease.Published),
-				Updated    = DateTime.Parse(latestAsset.Uploaded),
+				Published  = DateTime.Parse(latestRelease.Published, DateTimeFormatInfo.InvariantInfo),
+				Updated    = DateTime.Parse(latestAsset.Uploaded, DateTimeFormatInfo.InvariantInfo),
 				ReleaseUrl = latestRelease.HtmlUrl
 			};
 		}
 
-		public ModDownload GetGameBananaReleases(ModInfo mod, string folder,
-			List<string> errors)
+		public ModDownload GetGameBananaReleases(ModInfo mod, string folder, List<string> errors)
 		{
 			GameBananaItem gbi;
 			try
@@ -142,23 +154,8 @@ namespace ModManagerCommon
 				return null;
 			}
 
-			string versionPath = Path.Combine("mods", folder, "mod.version");
-			DateTime? localVersion = null;
-
-			if (File.Exists(versionPath))
-			{
-				localVersion = DateTime.Parse(File.ReadAllText(versionPath).Trim());
-			}
-			else
-			{
-				var info = new FileInfo(Path.Combine("mods", folder, "mod.manifest"));
-				if (info.Exists)
-				{
-					localVersion = info.LastWriteTimeUtc;
-				}
-			}
-
 			GameBananaItemUpdate latestUpdate = gbi.Updates[0];
+			DateTime? localVersion = GetLocalVersion(folder);
 
 			if (!ForceUpdate && localVersion.HasValue)
 			{
@@ -185,7 +182,7 @@ namespace ModManagerCommon
 		}
 
 		public ModDownload CheckModularVersion(ModInfo mod, string folder, List<ModManifestEntry> localManifest,
-			UpdaterWebClient client, List<string> errors)
+		                                       UpdaterWebClient client, List<string> errors)
 		{
 			if (!mod.UpdateUrl.StartsWith("http://", StringComparison.InvariantCulture)
 				&& !mod.UpdateUrl.StartsWith("https://", StringComparison.InvariantCulture))
@@ -291,8 +288,9 @@ namespace ModManagerCommon
 		/// <param name="updatableMods">Key-value pairs of mods to be checked, where the key is the mod path and the value is the mod metadata.</param>
 		/// <param name="updates">Output list of mods with available updates.</param>
 		/// <param name="errors">Output list of errors encountered during the update process.</param>
+		/// <param name="cancellationToken"><see cref="CancellationToken"/> for cancelling the operation. Currently unused.</param>
 		public void GetModUpdates(List<KeyValuePair<string, ModInfo>> updatableMods,
-			out List<ModDownload> updates, out List<string> errors, CancellationToken cancellationToken)
+		                          out List<ModDownload> updates, out List<string> errors, CancellationToken cancellationToken)
 		{
 			updates = new List<ModDownload>();
 			errors = new List<string>();

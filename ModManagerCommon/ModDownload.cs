@@ -309,7 +309,7 @@ namespace ModManagerCommon
 
 					File.Copy(newManPath, oldManPath, true);
 					Directory.Delete(dataDir, true);
-					File.WriteAllText(Path.Combine(Folder, "mod.version"), Updated.ToString(CultureInfo.InvariantCulture));
+					File.WriteAllText(Path.Combine(Folder, "mod.version"), Updated.ToString(DateTimeFormatInfo.InvariantInfo));
 
 					if (File.Exists(filePath))
 					{
