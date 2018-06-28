@@ -150,6 +150,11 @@ class CodeParser
 		 * Process the code list.
 		 */
 		void processCodeList(void);
+		/**
+		 * Sets a base offset for all codes.
+		 * Call this before loading the code list.
+		 */
+		void setOffset(ptrdiff_t offset);
 
 	public:
 		/**
@@ -204,6 +209,11 @@ class CodeParser
 		 * All loaded codes.
 		 */
 		std::list<Code> m_codes;
+
+		/**
+		 * Offset to be added to each code's address.
+		 */
+		ptrdiff_t offset = 0;
 };
 
 #endif /* CODEPARSER_HPP */

@@ -1106,6 +1106,15 @@ void CodeParser::processCodeList(void)
 }
 
 /**
+* Sets a base offset for all codes.
+* Call this before loading the code list.
+*/
+void CodeParser::setOffset(ptrdiff_t offset)
+{
+	this->offset = offset;
+}
+
+/**
  * Read codes from a code file.
  * This will clear all loaded codes before loading new codes.
  * @param filename Code file.
@@ -1199,7 +1208,7 @@ unsigned char CodeParser::readCodes_int(istream &stream, list<Code> &clist)
 		uintptr_t addr;
 		stream.read((char *)&addr, sizeof(uintptr_t));
 		code.pointer = (addr & 0x80000000u) == 0x80000000u;
-		code.address = (void *)(addr & 0x7FFFFFFF);
+		code.address = (void *)((addr & 0x7FFFFFFF) + offset);
 		if (code.pointer)
 		{
 			code.offsetcount = stream.get();
