@@ -1208,7 +1208,10 @@ unsigned char CodeParser::readCodes_int(istream &stream, list<Code> &clist)
 		uintptr_t addr;
 		stream.read((char *)&addr, sizeof(uintptr_t));
 		code.pointer = (addr & 0x80000000u) == 0x80000000u;
-		code.address = (void *)((addr & 0x7FFFFFFF) + offset);
+		addr &= 0x7FFFFFFF;
+		if (addr >= 16)
+			addr += offset;
+		code.address = (void*)addr;
 		if (code.pointer)
 		{
 			code.offsetcount = stream.get();
