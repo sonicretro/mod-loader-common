@@ -7,6 +7,12 @@
 #include "IniFile.hpp"
 #include "TextConv.hpp"
 
+// Needed for CP_UTF8 if stdafx.h doesn't have windows.h.
+#ifndef WIN32_LEAN_AND_MEAN
+# define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
