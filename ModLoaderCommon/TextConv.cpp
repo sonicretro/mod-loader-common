@@ -46,24 +46,36 @@ char *UTF16toMBS(const wchar_t *wcs, unsigned int cp)
 /** Convenience functions. **/
 
 /**
+ * Convert from one multibyte text format to another
+ * @param source Text to convert.
+ * @param sourcecp Code page of the source string.
+ * @param targetcp Code page to convert to.
+ * @return Converted text, or empty string on error.
+ */
+char *MBStoMBS(const char *source, unsigned int sourcecp, unsigned int targetcp)
+{
+	// Convert from the source codepage to UTF-16.
+	wchar_t *wcs = MBStoUTF16(source, sourcecp);
+	if (!wcs)
+		return nullptr;
+
+	// Convert from UTF-16 to the target codepage.
+	char *mbs = UTF16toMBS(wcs, targetcp);
+	delete[] wcs;
+	if (!mbs)
+		return nullptr;
+
+	return mbs;
+}
+
+/**
  * Convert Shift-JIS text to UTF-8.
  * @param sjis Shift-JIS text, null-terminated.
  * @return UTF-8 text (allocated via new[]), or nullptr on error.
  */
 char *SJIStoUTF8(const char *sjis)
 {
-	// Convert from Shift-JIS to UTF-16.
-	wchar_t *wcs = MBStoUTF16(sjis, CP_SJIS);
-	if (!wcs)
-		return nullptr;
-
-	// Convert from UTF-16 to UTF-8.
-	char *mbs = UTF16toMBS(wcs, CP_UTF8);
-	delete[] wcs;
-	if (!mbs)
-		return nullptr;
-
-	return mbs;
+	return MBStoMBS(sjis, CP_SJIS, CP_UTF8);
 }
 
 /**
@@ -73,18 +85,7 @@ char *SJIStoUTF8(const char *sjis)
  */
 char *UTF8toSJIS(const char *utf8)
 {
-	// Convert from UTF-8 to UTF-16.
-	wchar_t *wcs = MBStoUTF16(utf8, CP_UTF8);
-	if (!wcs)
-		return nullptr;
-
-	// Convert from UTF-16 to Shift-JIS.
-	char *mbs = UTF16toMBS(wcs, CP_SJIS);
-	delete[] wcs;
-	if (!mbs)
-		return nullptr;
-
-	return mbs;
+	return MBStoMBS(utf8, CP_UTF8, CP_SJIS);
 }
 
 /**
@@ -94,18 +95,7 @@ char *UTF8toSJIS(const char *utf8)
  */
 char *UTF8to1252(const char *utf8)
 {
-	// Convert from UTF-8 to UTF-16.
-	wchar_t *wcs = MBStoUTF16(utf8, CP_UTF8);
-	if (!wcs)
-		return nullptr;
-
-	// Convert from UTF-16 to Shift-JIS.
-	char *mbs = UTF16toMBS(wcs, 1252);
-	delete[] wcs;
-	if (!mbs)
-		return nullptr;
-
-	return mbs;
+	return MBStoMBS(utf8, CP_UTF8, 1252);
 }
 
 /** C++ wrappers. **/
@@ -151,19 +141,31 @@ string UTF16toMBS(const wstring &wcs, unsigned int cp)
 /** Convenience functions. **/
 
 /**
+ * Convert from one multibyte text format to another
+ * @param source Text to convert.
+ * @param sourcecp Code page of the source string.
+ * @param targetcp Code page to convert to.
+ * @return Converted text, or empty string on error.
+ */
+string MBStoMBS(const string &source, unsigned int sourcecp, unsigned int targetcp)
+{
+	char *mbs = MBStoMBS(source.c_str(), sourcecp, targetcp);
+	if (!mbs)
+		return string();
+
+	string mstr(mbs);
+	delete[] mbs;
+	return mstr;
+}
+
+/**
  * Convert Shift-JIS text to UTF-8.
  * @param sjis Shift-JIS text.
  * @return UTF-8 text, or empty string on error.
  */
 string SJIStoUTF8(const string &sjis)
 {
-	char *utf8 = SJIStoUTF8(sjis.c_str());
-	if (!utf8)
-		return string();
-
-	string ustr(utf8);
-	delete[] utf8;
-	return ustr;
+	return MBStoMBS(sjis, CP_SJIS, CP_UTF8);
 }
 
 /**
@@ -173,13 +175,7 @@ string SJIStoUTF8(const string &sjis)
  */
 string UTF8toSJIS(const string &utf8)
 {
-	char *sjis = UTF8toSJIS(utf8.c_str());
-	if (!sjis)
-		return string();
-
-	string jstr(sjis);
-	delete[] sjis;
-	return jstr;
+	return MBStoMBS(utf8, CP_UTF8, CP_SJIS);
 }
 
 /**
@@ -189,11 +185,5 @@ string UTF8toSJIS(const string &utf8)
  */
 string UTF8to1252(const string &utf8)
 {
-	char *w1252 = UTF8to1252(utf8.c_str());
-	if (!w1252)
-		return string();
-
-	string estr(w1252);
-	delete[] w1252;
-	return estr;
+	return MBStoMBS(utf8, CP_UTF8, 1252);
 }
