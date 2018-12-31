@@ -6,6 +6,7 @@
 #include "stdafx.h"
 #include "IniFile.hpp"
 #include "TextConv.hpp"
+#include "Utils.hpp"
 
 // Needed for CP_UTF8 if stdafx.h doesn't have windows.h.
 #ifndef WIN32_LEAN_AND_MEAN
@@ -16,6 +17,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <list>
 using std::transform;
 using std::string;
 using std::unordered_map;
