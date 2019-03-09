@@ -556,6 +556,9 @@ int CodeParser::processCodeList_int(const list<Code> &codes, int regnum)
 		case writenop:
 			WriteData(&addr->u8, 0x90u, it->value.u32);
 			break;
+		case writeoff:
+			WriteData(&addr->u32, it->repeatcount, it->value.u32 + offset);
+			break;
 		case ifeq8:
 			ifcode(8,==);
 				break;
