@@ -30,7 +30,7 @@ namespace ModManagerCommon
 						string line = sr.ReadLine().Trim(' ', '\t');
 						if (line.Length == 0) continue;
 						if (line.StartsWith(";")) continue;
-						string[] split = line.Split(' ');
+						string[] split = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 						Code code = null;
 						switch (split[0])
 						{
