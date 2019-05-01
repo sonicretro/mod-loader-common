@@ -29,6 +29,7 @@ inline bool FileExists(const std::string& path)
 }
 
 std::string GetDirectory(const std::string& path);
+std::wstring GetDirectory(const std::wstring& path);
 std::string GetBaseName(const std::string& path);
 void StripExtension(std::string& path);
 std::string GetExtension(const std::string& path, bool includeDot = false);
