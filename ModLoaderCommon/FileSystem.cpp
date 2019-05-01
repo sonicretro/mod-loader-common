@@ -61,6 +61,29 @@ string GetDirectory(const string& path)
 	return path.substr(last);
 }
 
+wstring GetDirectory(const wstring& path)
+{
+	auto slash = path.find_last_of(L"/\\");
+	if (slash == string::npos)
+	{
+		return wstring();
+	}
+
+	if (slash != path.size() - 1)
+	{
+		return path.substr(0, slash);
+	}
+
+	auto last = slash;
+	slash = path.find_last_of(L"/\\", last);
+	if (slash == string::npos)
+	{
+		return wstring();
+	}
+
+	return path.substr(last);
+}
+
 string GetBaseName(const string& path)
 {
 	auto slash = path.find_last_of("/\\");

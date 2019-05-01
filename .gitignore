@@ -189,5 +189,5 @@ _Pvt_Extensions/
 ModelManifest.xml
 *.db
 *.opendb
-/.vs/ModLoaderCommon/v15
+/.vs/
 *.dtbcache
