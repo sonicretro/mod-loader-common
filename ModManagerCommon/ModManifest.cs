@@ -207,6 +207,7 @@ namespace ModManagerCommon
 			{
 				// First, check for an exact match. File path/name, hash, size; everything.
 				ModManifestEntry exact = old.FirstOrDefault(x => Equals(x, entry));
+
 				if (exact != null)
 				{
 					old.Remove(exact);
@@ -221,10 +222,7 @@ namespace ModManagerCommon
 				// the file path to see if it's been moved.
 				if (checksum.Count > 0)
 				{
-					foreach (ModManifestEntry c in checksum)
-					{
-						old.Remove(c);
-					}
+					old.Remove(checksum[0]);
 
 					if (checksum.All(x => x.FilePath != entry.FilePath))
 					{
@@ -237,6 +235,7 @@ namespace ModManagerCommon
 				// If we've made it here, there's no matching checksums, so let's search
 				// for matching paths. If a path matches, the file has been modified.
 				ModManifestEntry nameMatch = old.FirstOrDefault(x => x.FilePath.Equals(entry.FilePath, StringComparison.InvariantCultureIgnoreCase));
+
 				if (nameMatch != null)
 				{
 					old.Remove(nameMatch);
