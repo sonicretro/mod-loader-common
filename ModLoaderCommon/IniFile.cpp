@@ -30,7 +30,7 @@ using std::wstring;
  * @param key Key.
  * @return True if the key exists; false if not.
  */
-bool IniGroup::hasKey(const string &key) const
+bool IniGroup::hasKey(const string& key) const
 {
 	return (m_data.find(key) != m_data.end());
 }
@@ -40,7 +40,7 @@ bool IniGroup::hasKey(const string &key) const
  * @param key Key.
  * @return True if the key exists; false if not or value is empty.
  */
-bool IniGroup::hasKeyNonEmpty(const string &key) const
+bool IniGroup::hasKeyNonEmpty(const string& key) const
 {
 	auto iter = m_data.find(key);
 	if (iter == m_data.end())
@@ -49,7 +49,7 @@ bool IniGroup::hasKeyNonEmpty(const string &key) const
 	return !iter->second.empty();
 }
 
-const unordered_map<string, string> *IniGroup::data(void) const
+const unordered_map<string, string>* IniGroup::data() const
 {
 	return &m_data;
 }
@@ -60,7 +60,7 @@ const unordered_map<string, string> *IniGroup::data(void) const
  * @param def Default value.
  * @return String value.
  */
-string IniGroup::getString(const string &key, const string &def) const
+string IniGroup::getString(const string& key, const string& def) const
 {
 	auto iter = m_data.find(key);
 	return (iter != m_data.end() ? iter->second : def);
@@ -73,7 +73,7 @@ string IniGroup::getString(const string &key, const string &def) const
  * @param def Default value.
  * @return Wide string value.
  */
-wstring IniGroup::getWString(const string &key, const wstring &def) const
+wstring IniGroup::getWString(const string& key, const wstring& def) const
 {
 	auto iter = m_data.find(key);
 	if (iter == m_data.end())
@@ -89,7 +89,7 @@ wstring IniGroup::getWString(const string &key, const wstring &def) const
  * @param def Default value.
  * @return Boolean value.
  */
-bool IniGroup::getBool(const string &key, bool def) const
+bool IniGroup::getBool(const string& key, bool def) const
 {
 	auto iter = m_data.find(key);
 	if (iter == m_data.end())
@@ -105,7 +105,7 @@ bool IniGroup::getBool(const string &key, bool def) const
  * @param def Default value.
  * @return Integer value.
  */
-int IniGroup::getIntRadix(const string &key, int radix, int def) const
+int IniGroup::getIntRadix(const string& key, int radix, int def) const
 {
 	auto iter = m_data.find(key);
 	if (iter == m_data.end())
@@ -120,7 +120,7 @@ int IniGroup::getIntRadix(const string &key, int radix, int def) const
  * @param def Default value.
  * @return Integer value.
  */
-int IniGroup::getInt(const string &key, int def) const
+int IniGroup::getInt(const string& key, int def) const
 {
 	return getIntRadix(key, 10, def);
 }
@@ -131,7 +131,7 @@ int IniGroup::getInt(const string &key, int def) const
  * @param def Default value.
  * @return Floating-point value.
  */
-float IniGroup::getFloat(const string &key, float def) const
+float IniGroup::getFloat(const string& key, float def) const
 {
 	auto iter = m_data.find(key);
 	if (iter == m_data.end())
@@ -145,7 +145,7 @@ float IniGroup::getFloat(const string &key, float def) const
 * @param key Key.
 * @param val Value.
 */
-void IniGroup::setString(const string &key, const string &val)
+void IniGroup::setString(const string& key, const string& val)
 {
 	m_data[key] = val;
 }
@@ -156,7 +156,7 @@ void IniGroup::setString(const string &key, const string &val)
 * @param key Key.
 * @param val Value.
 */
-void IniGroup::setWString(const string &key, const wstring &val)
+void IniGroup::setWString(const string& key, const wstring& val)
 {
 	m_data[key] = UTF16toMBS(val, CP_UTF8);
 }
@@ -166,7 +166,7 @@ void IniGroup::setWString(const string &key, const wstring &val)
 * @param key Key.
 * @param val Value.
 */
-void IniGroup::setBool(const string &key, bool val)
+void IniGroup::setBool(const string& key, bool val)
 {
 	string str;
 	if (val)
@@ -182,7 +182,7 @@ void IniGroup::setBool(const string &key, bool val)
 * @param radix Radix.
 * @param val Value.
 */
-void IniGroup::setIntRadix(const string &key, int radix, int val)
+void IniGroup::setIntRadix(const string& key, int radix, int val)
 {
 	char buf[sizeof(int) * 8 + 1];
 #ifdef _MSC_VER
@@ -209,7 +209,7 @@ void IniGroup::setIntRadix(const string &key, int radix, int val)
 * @param key Key.
 * @param val Value.
 */
-void IniGroup::setInt(const string &key, int val)
+void IniGroup::setInt(const string& key, int val)
 {
 	m_data[key] = std::to_string(val);
 }
@@ -219,7 +219,7 @@ void IniGroup::setInt(const string &key, int val)
 * @param key Key.
 * @param val Value.
 */
-void IniGroup::setFloat(const string &key, float val)
+void IniGroup::setFloat(const string& key, float val)
 {
 	m_data[key] = std::to_string(val);
 }
@@ -229,7 +229,7 @@ void IniGroup::setFloat(const string &key, float val)
 * @param key Key.
 * @return True if key was found.
 */
-bool IniGroup::removeKey(const string &key)
+bool IniGroup::removeKey(const string& key)
 {
 	if (hasKey(key))
 	{
@@ -239,65 +239,65 @@ bool IniGroup::removeKey(const string &key)
 	return false;
 }
 
-std::unordered_map<string, string>::iterator IniGroup::begin()
+IniGroup::iterator IniGroup::begin()
 {
 	return m_data.begin();
 }
 
-std::unordered_map<string, string>::const_iterator IniGroup::cbegin() const
+IniGroup::const_iterator IniGroup::cbegin() const
 {
 	return m_data.cbegin();
 }
 
-std::unordered_map<string, string>::iterator IniGroup::end()
+IniGroup::iterator IniGroup::end()
 {
 	return m_data.end();
 }
 
-std::unordered_map<string, string>::const_iterator IniGroup::cend() const
+IniGroup::const_iterator IniGroup::cend() const
 {
 	return m_data.cend();
 }
 
 /** IniFile **/
 
-IniFile::IniFile(const string &filename)
+IniFile::IniFile(const string& filename)
 {
-	FILE *f = fopen(filename.c_str(), "r");
+	FILE* f = fopen(filename.c_str(), "r");
 	if (!f)
 		return;
 	load(f);
 	fclose(f);
 }
 
-IniFile::IniFile(const wstring &filename)
+IniFile::IniFile(const wstring& filename)
 {
-	FILE *f = _wfopen(filename.c_str(), L"r");
+	FILE* f = _wfopen(filename.c_str(), L"r");
 	if (!f)
 		return;
 	load(f);
 	fclose(f);
 }
 
-IniFile::IniFile(const char *filename)
+IniFile::IniFile(const char* filename)
 {
-	FILE *f = fopen(filename, "r");
+	FILE* f = fopen(filename, "r");
 	if (!f)
 		return;
 	load(f);
 	fclose(f);
 }
 
-IniFile::IniFile(const wchar_t *filename)
+IniFile::IniFile(const wchar_t* filename)
 {
-	FILE *f = _wfopen(filename, L"r");
+	FILE* f = _wfopen(filename, L"r");
 	if (!f)
 		return;
 	load(f);
 	fclose(f);
 }
 
-IniFile::IniFile(FILE *f)
+IniFile::IniFile(FILE* f)
 {
 	load(f);
 }
@@ -312,7 +312,7 @@ IniFile::~IniFile()
  * @param section Section.
  * @return INI group, or nullptr if not found.
  */
-IniGroup *IniFile::getGroup(const string &section)
+IniGroup* IniFile::getGroup(const string& section)
 {
 	auto iter = m_groups.find(section);
 	return (iter != m_groups.end() ? iter->second : nullptr);
@@ -323,7 +323,7 @@ IniGroup *IniFile::getGroup(const string &section)
 * @param section Section.
 * @return INI group, or nullptr if not found.
 */
-const IniGroup *IniFile::getGroup(const string &section) const
+const IniGroup* IniFile::getGroup(const string& section) const
 {
 	auto iter = m_groups.find(section);
 	return (iter != m_groups.end() ? iter->second : nullptr);
@@ -334,12 +334,12 @@ const IniGroup *IniFile::getGroup(const string &section) const
 * @param section Section.
 * @return INI group.
 */
-IniGroup *IniFile::createGroup(const string &section)
+IniGroup* IniFile::createGroup(const string& section)
 {
 	auto iter = m_groups.find(section);
 	if (iter != m_groups.end())
 		return iter->second;
-	IniGroup *group = new IniGroup();
+	auto* group   = new IniGroup();
 	m_groups[section] = group;
 	return group;
 }
@@ -349,7 +349,7 @@ IniGroup *IniFile::createGroup(const string &section)
  * @param section Section.
  * @return True if the section exists; false if not.
  */
-bool IniFile::hasGroup(const string &section) const
+bool IniFile::hasGroup(const string& section) const
 {
 	return (m_groups.find(section) != m_groups.end());
 }
@@ -360,7 +360,7 @@ bool IniFile::hasGroup(const string &section) const
  * @param key Key.
  * @return True if the key exists; false if not.
  */
-bool IniFile::hasKey(const string &section, const string &key) const
+bool IniFile::hasKey(const string& section, const string& key) const
 {
 	auto iter = m_groups.find(section);
 	if (iter == m_groups.end())
@@ -375,7 +375,7 @@ bool IniFile::hasKey(const string &section, const string &key) const
  * @param key Key.
  * @return True if the key exists; false if not or value is empty.
  */
-bool IniFile::hasKeyNonEmpty(const string &section, const string &key) const
+bool IniFile::hasKeyNonEmpty(const string& section, const string& key) const
 {
 	auto iter = m_groups.find(section);
 	if (iter == m_groups.end())
@@ -391,9 +391,9 @@ bool IniFile::hasKeyNonEmpty(const string &section, const string &key) const
  * @param def Default value.
  * @return String value.
  */
-string IniFile::getString(const string &section, const string &key, const string &def) const
+string IniFile::getString(const string& section, const string& key, const string& def) const
 {
-	const IniGroup *group = getGroup(section);
+	const IniGroup* group = getGroup(section);
 	if (!group)
 		return def;
 	return group->getString(key, def);
@@ -407,9 +407,9 @@ string IniFile::getString(const string &section, const string &key, const string
  * @param def Default value.
  * @return Wide string value.
  */
-wstring IniFile::getWString(const string &section, const string &key, const wstring &def) const
+wstring IniFile::getWString(const string& section, const string& key, const wstring& def) const
 {
-	const IniGroup *group = getGroup(section);
+	const IniGroup* group = getGroup(section);
 	if (!group)
 		return def;
 	return group->getWString(key, def);
@@ -422,9 +422,9 @@ wstring IniFile::getWString(const string &section, const string &key, const wstr
  * @param def Default value.
  * @return Boolean value.
  */
-bool IniFile::getBool(const string &section, const string &key, bool def) const
+bool IniFile::getBool(const string& section, const string& key, bool def) const
 {
-	const IniGroup *group = getGroup(section);
+	const IniGroup* group = getGroup(section);
 	if (!group)
 		return def;
 	return group->getBool(key, def);
@@ -438,9 +438,9 @@ bool IniFile::getBool(const string &section, const string &key, bool def) const
  * @param def Default value.
  * @return Integer value.
  */
-int IniFile::getIntRadix(const string &section, const string &key, int radix, int def) const
+int IniFile::getIntRadix(const string& section, const string& key, int radix, int def) const
 {
-	const IniGroup *group = getGroup(section);
+	const IniGroup* group = getGroup(section);
 	if (!group)
 		return def;
 	return group->getIntRadix(key, radix, def);
@@ -453,9 +453,9 @@ int IniFile::getIntRadix(const string &section, const string &key, int radix, in
  * @param def Default value.
  * @return Integer value.
  */
-int IniFile::getInt(const string &section, const string &key, int def) const
+int IniFile::getInt(const string& section, const string& key, int def) const
 {
-	const IniGroup *group = getGroup(section);
+	const IniGroup* group = getGroup(section);
 	if (!group)
 		return def;
 	return group->getInt(key, def);
@@ -468,9 +468,9 @@ int IniFile::getInt(const string &section, const string &key, int def) const
  * @param def Default value.
  * @return Floating-point value.
  */
-float IniFile::getFloat(const string &section, const string &key, float def) const
+float IniFile::getFloat(const string& section, const string& key, float def) const
 {
-	const IniGroup *group = getGroup(section);
+	const IniGroup* group = getGroup(section);
 	if (!group)
 		return def;
 	return group->getFloat(key, def);
@@ -482,7 +482,7 @@ float IniFile::getFloat(const string &section, const string &key, float def) con
 * @param key Key.
 * @param val Value.
 */
-void IniFile::setString(const string &section, const string &key, const string &val)
+void IniFile::setString(const string& section, const string& key, const string& val)
 {
 	createGroup(section)->setString(key, val);
 }
@@ -494,7 +494,7 @@ void IniFile::setString(const string &section, const string &key, const string &
 * @param key Key.
 * @param val Value.
 */
-void IniFile::setWString(const string &section, const string &key, const wstring &val)
+void IniFile::setWString(const string& section, const string& key, const wstring& val)
 {
 	createGroup(section)->setWString(key, val);
 }
@@ -505,7 +505,7 @@ void IniFile::setWString(const string &section, const string &key, const wstring
 * @param key Key.
 * @param val Value.
 */
-void IniFile::setBool(const string &section, const string &key, bool val)
+void IniFile::setBool(const string& section, const string& key, bool val)
 {
 	createGroup(section)->setBool(key, val);
 }
@@ -517,7 +517,7 @@ void IniFile::setBool(const string &section, const string &key, bool val)
 * @param radix Radix.
 * @param val Value.
 */
-void IniFile::setIntRadix(const string &section, const string &key, int radix, int val)
+void IniFile::setIntRadix(const string& section, const string& key, int radix, int val)
 {
 	createGroup(section)->setIntRadix(key, radix, val);
 }
@@ -528,7 +528,7 @@ void IniFile::setIntRadix(const string &section, const string &key, int radix, i
 * @param key Key.
 * @param val Value.
 */
-void IniFile::setInt(const string &section, const string &key, int val)
+void IniFile::setInt(const string& section, const string& key, int val)
 {
 	createGroup(section)->setInt(key, val);
 }
@@ -539,22 +539,22 @@ void IniFile::setInt(const string &section, const string &key, int val)
 * @param key Key.
 * @param val Value.
 */
-void IniFile::setFloat(const string &section, const string &key, float val)
+void IniFile::setFloat(const string& section, const string& key, float val)
 {
 	createGroup(section)->setFloat(key, val);
 }
 
 /**
 * Remove a section from the INI file.
-* @param section Section.
+* @param group Section.
 * @return True if section was found.
 */
-bool IniFile::removeGroup(const string &section)
+bool IniFile::removeGroup(const string& group)
 {
-	if (hasGroup(section))
+	if (hasGroup(group))
 	{
-		delete m_groups[section];
-		m_groups.erase(section);
+		delete m_groups[group];
+		m_groups.erase(group);
 		return true;
 	}
 	return false;
@@ -566,9 +566,9 @@ bool IniFile::removeGroup(const string &section)
 * @param key Key.
 * @return True if key was found.
 */
-bool IniFile::removeKey(const string &section, const string &key)
+bool IniFile::removeKey(const string& section, const string& key)
 {
-	IniGroup *group = getGroup(section);
+	IniGroup* group = getGroup(section);
 	if (group)
 		return group->removeKey(key);
 	return false;
@@ -578,9 +578,9 @@ bool IniFile::removeKey(const string &section, const string &key)
 * Save an INI file.
 * @param filename Name of file to save to.
 */
-void IniFile::save(const string &filename) const
+void IniFile::save(const string& filename) const
 {
-	FILE *f = fopen(filename.c_str(), "r");
+	FILE* f = fopen(filename.c_str(), "r");
 	if (!f)
 		return;
 
@@ -592,9 +592,9 @@ void IniFile::save(const string &filename) const
 * Save an INI file.
 * @param filename Name of file to save to.
 */
-void IniFile::save(const wstring &filename) const
+void IniFile::save(const wstring& filename) const
 {
-	FILE *f = _wfopen(filename.c_str(), L"r");
+	FILE* f = _wfopen(filename.c_str(), L"r");
 	if (!f)
 		return;
 
@@ -606,20 +606,33 @@ void IniFile::save(const wstring &filename) const
 * Save an INI file.
 * @param f FILE pointer. (File is not closed after processing.)
 */
-void IniFile::save(FILE *f) const
+void IniFile::save(FILE* f) const
 {
 	std::list<std::pair<string, IniGroup*>> list;
+
 	for (auto it = cbegin(); it != cend(); ++it)
+	{
 		if (it->first.empty())
-			list.push_front(std::make_pair(it->first, it->second));
+		{
+			list.emplace_front(it->first, it->second);
+		}
 		else
-			list.push_back(std::make_pair(it->first, it->second));
-	for (auto gr : list)
+		{
+			list.emplace_back(it->first, it->second);
+		}
+	}
+
+	for (const auto& gr : list)
 	{
 		if (!gr.first.empty())
+		{
 			fprintf(f, "[%s]\n", escape(gr.first, true, false).c_str());
-		for (auto kv = gr.second->cbegin(); kv != gr.second->cend(); ++kv)
-			fprintf(f, "%s=%s\n", escape(kv->first, false, true).c_str(), escape(kv->second, false, false).c_str());
+		}
+
+		for (const auto& kv : *gr.second)
+		{
+			fprintf(f, "%s=%s\n", escape(kv.first, false, true).c_str(), escape(kv.second, false, false).c_str());
+		}
 	}
 }
 
@@ -648,20 +661,20 @@ std::unordered_map<string, IniGroup*>::const_iterator IniFile::cend() const
  * Internal function; called from the constructor.
  * @param f FILE pointer. (File is not closed after processing.)
  */
-void IniFile::load(FILE *f)
+void IniFile::load(FILE* f)
 {
 	clear();
 	fseek(f, 0, SEEK_SET);
 
 	// Create an empty group for default settings.
-	IniGroup *curGroup = new IniGroup();
-	m_groups[""] = curGroup;
+	auto* curGroup = new IniGroup();
+	m_groups[""]       = curGroup;
 
 	// Process the INI file.
 	while (!feof(f))
 	{
 		char line[1024];
-		char *ret = fgets(line, sizeof(line), f);
+		char* ret = fgets(line, sizeof(line), f);
 		if (!ret)
 			break;
 		const int line_len = (int)strnlen(line, sizeof(line));
@@ -669,8 +682,8 @@ void IniFile::load(FILE *f)
 			continue;
 
 		bool startswithbracket = false;
-		int firstequals = -1;
-		int endbracket = -1;
+		int firstequals        = -1;
+		int endbracket         = -1;
 
 		// String can contain escape characters, so
 		// we need a string buffer.
@@ -724,7 +737,7 @@ void IniFile::load(FILE *f)
 					break;
 
 				default:
-appendchar:
+				appendchar:
 					// Normal character. Append to the string buffer.
 					sb += line[c];
 					break;
@@ -736,7 +749,7 @@ appendchar:
 		{
 			// New section.
 			string section = sb.substr(1, endbracket - 1);
-			auto iter = m_groups.find(section);
+			auto iter      = m_groups.find(section);
 			if (iter != m_groups.end())
 			{
 				// Section already exists.
@@ -746,7 +759,7 @@ appendchar:
 			else
 			{
 				// New section.
-				curGroup = new IniGroup();
+				curGroup          = new IniGroup();
 				m_groups[section] = curGroup;
 			}
 		}
@@ -757,7 +770,7 @@ appendchar:
 			string value;
 			if (firstequals > -1)
 			{
-				key = sb.substr(0, firstequals);
+				key   = sb.substr(0, firstequals);
 				value = sb.substr(firstequals + 1);
 			}
 			else
@@ -774,40 +787,47 @@ appendchar:
 /**
  * Clear the loaded INI file.
  */
-void IniFile::clear(void)
+void IniFile::clear()
 {
-	for (auto iter = m_groups.begin(); iter != m_groups.end(); ++iter)
+	for (auto& m_group : m_groups)
 	{
-		delete iter->second;
+		delete m_group.second;
 	}
 
 	m_groups.clear();
 }
 
-string IniFile::escape(const string &str, bool sec, bool key) const
+string IniFile::escape(const string& str, bool sec, bool key)
 {
 	string result(str);
+
 	for (size_t i = 0; i < result.size(); i++)
-		switch (result[i])
 	{
-		case '=':
-			if (key)
+		switch (result[i])
+		{
+			case '=':
+				if (key)
+					result.insert(i++, "\\");
+				break;
+			case '[':
+				if (key && i == 0)
+					result.insert(i++, "\\");
+				break;
+			case ']':
+				if (sec)
+					result.insert(i++, "\\");
+				break;
+			case '\\':
+			case '\n':
+			case '\r':
+			case ';':
 				result.insert(i++, "\\");
-			break;
-		case '[':
-			if (key && i == 0)
-				result.insert(i++, "\\");
-			break;
-		case ']':
-			if (sec)
-				result.insert(i++, "\\");
-			break;
-		case '\\':
-		case '\n':
-		case '\r':
-		case ';':
-			result.insert(i++, "\\");
-			break;
+				break;
+
+			default:
+				break;
+		}
 	}
+
 	return result;
 }
