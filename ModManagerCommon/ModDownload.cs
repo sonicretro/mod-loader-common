@@ -297,17 +297,31 @@ namespace ModManagerCommon
 							}
 						}
 
-						string dest = Path.Combine(Folder, file.FilePath);
+						var sourceFile = new FileInfo(Path.Combine(workDir, file.FilePath));
+						var destFile = new FileInfo(Path.Combine(Folder, file.FilePath));
 
-						if (File.Exists(dest))
+						if (destFile.Exists)
 						{
-							File.Delete(dest);
+							destFile.Delete();
 						}
 
-						File.Move(Path.Combine(workDir, file.FilePath), dest);
+						sourceFile.Attributes &= ~FileAttributes.ReadOnly;
+						sourceFile.MoveTo(destFile.FullName);
 					}
 
 					File.Copy(newManPath, oldManPath, true);
+
+					void removeReadOnly(DirectoryInfo dir)
+					{
+						foreach (DirectoryInfo d in dir.GetDirectories())
+						{
+							removeReadOnly(d);
+							d.Attributes &= ~FileAttributes.ReadOnly;
+						}
+					}
+
+					removeReadOnly(new DirectoryInfo(dataDir));
+
 					Directory.Delete(dataDir, true);
 					File.WriteAllText(Path.Combine(Folder, "mod.version"), Updated.ToString(DateTimeFormatInfo.InvariantInfo));
 
