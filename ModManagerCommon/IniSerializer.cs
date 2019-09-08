@@ -549,7 +549,7 @@ namespace IniFile
 					if (converter == null)
 						converter = TypeDescriptor.GetConverter(type);
 					if (converter != null && !(converter is ComponentConverter) && converter.GetType() != typeof(TypeConverter))
-						if (converter.CanConvertTo(typeof(string)) & converter.CanConvertFrom(typeof(string)))
+						if (converter.CanConvertTo(typeof(string)) && converter.CanConvertFrom(typeof(string)))
 							return false;
 					if (type.GetType() == typeof(Type))
 						return false;
