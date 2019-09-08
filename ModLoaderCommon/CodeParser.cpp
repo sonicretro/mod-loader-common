@@ -46,23 +46,27 @@ CodeParser::~CodeParser()
 
 void* CodeParser::GetAddress(const Code& code, valuetype* regs)
 {
-	void* addr = code.address;
-	if (addr < (void *)16)
-		addr = &regs[(int)addr];
+	uintptr_t addr = reinterpret_cast<uintptr_t>(code.address);
+
+	// Check if this is a register instead of a pointer.
+	if (addr < 16)
+		addr = reinterpret_cast<uintptr_t>(&regs[addr]);
+
 	if (!code.pointer)
-		return addr;
-	addr = *(void **)addr;
-	if (code.offsetcount == 0 || addr == nullptr)
-		return addr;
+		return (void*)addr;
+
+	addr = *(uintptr_t*)addr;
+	if (code.offsetcount == 0 || addr == 0)
+		return (void*)addr;
 	for (int i = 0; i < code.offsetcount - 1; i++)
 	{
-		addr = (void *)((uint32_t)addr + code.offsets[i]);
-		addr = *(void **)addr;
-		if (addr == nullptr)
+		addr += code.offsets[i];
+		addr = *(uintptr_t*)addr;
+		if (addr == 0)
 			return nullptr;
 	}
-	addr = (void *)((uint32_t)addr + code.offsets[code.offsetcount - 1]);
-	return addr;
+	addr += code.offsets[code.offsetcount - 1];
+	return (void*)addr;
 }
 
 #define addr_add(s) addr=(valuetype*)(s+(uint8_t*)addr)
