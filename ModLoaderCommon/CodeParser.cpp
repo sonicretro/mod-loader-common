@@ -203,7 +203,7 @@ inline BOOL WriteData(void* writeaddress, const T (&data)[N])
 * @param byteswritten	[out, opt] Number of bytes written.
 * @return Nonzero on success; 0 on error (check GetLastError()).
 */
-inline BOOL WriteData(void* address, const char data, int count, SIZE_T* byteswritten)
+inline BOOL WriteData(void* address, const char data, size_t count, SIZE_T* byteswritten)
 {
 	char* buf = new char[count];
 	memset(buf, data, count);
@@ -219,7 +219,7 @@ inline BOOL WriteData(void* address, const char data, int count, SIZE_T* byteswr
 * @param count		[in] Number of repetitions.
 * @return Nonzero on success; 0 on error (check GetLastError()).
 */
-inline BOOL WriteData(void* address, char data, int count)
+inline BOOL WriteData(void* address, char data, size_t count)
 {
 	return WriteData(address, data, count, nullptr);
 }
