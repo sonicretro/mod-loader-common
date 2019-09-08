@@ -356,9 +356,9 @@ int CodeParser::processCodeList_int(const list<Code>& codes, int regnum)
 			regs = m_registers[regnum];
 
 		void* address = GetAddress(*it, regs);
-		auto* addr    = (valuetype*)address;
+		auto* addr    = static_cast<valuetype*>(address);
 
-		if (it->type != ifkbkey && address == nullptr)
+		if (it->type != ifkbkey && addr == nullptr)
 		{
 			if (distance(it->falseCodes.begin(), it->falseCodes.end()) > 0)
 				regnum = processCodeList_int(it->falseCodes, regnum);
