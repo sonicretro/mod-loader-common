@@ -69,10 +69,11 @@ void* CodeParser::GetAddress(const Code& code, valuetype* regs)
 	return (void*)addr;
 }
 
-#define addr_add(s) addr=(valuetype*)(s+(uint8_t*)addr)
+#define addr_add(s) do { \
+	addr = (valuetype*)((s) + (uint8_t*)addr); \
+} while (0)
 
-#define ifcode(size, op) \
-do { \
+#define ifcode(size, op) do { \
 	for (uint32_t i = 0; i < it->repeatcount; i++) \
 	{ \
 		cond &= addr->u##size op it->value.u##size; \
