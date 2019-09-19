@@ -14,6 +14,7 @@ inline bool DirectoryExists(const std::wstring& path)
 {
 	return Exists(path) && IsDirectory(path);
 }
+
 inline bool DirectoryExists(const std::string& path)
 {
 	return Exists(path) && IsDirectory(path);
@@ -23,6 +24,7 @@ inline bool FileExists(const std::wstring& path)
 {
 	return Exists(path) && IsFile(path);
 }
+
 inline bool FileExists(const std::string& path)
 {
 	return Exists(path) && IsFile(path);
@@ -39,4 +41,4 @@ std::string GetExtension(const std::string& path, bool includeDot = false);
  * @param filename	[in/out] Filename.
  * @param ext		[in] New extension, with leading dot.
  */
-void ReplaceFileExtension(std::string &filename, const char *ext);
+void ReplaceFileExtension(std::string& filename, const char* ext);

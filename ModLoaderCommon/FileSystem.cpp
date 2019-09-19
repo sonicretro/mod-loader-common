@@ -11,6 +11,7 @@ bool Exists(const wstring& path)
 {
 	return GetFileAttributesW(path.c_str()) != INVALID_FILE_ATTRIBUTES;
 }
+
 bool Exists(const string& path)
 {
 	return GetFileAttributesA(path.c_str()) != INVALID_FILE_ATTRIBUTES;
@@ -21,6 +22,7 @@ bool IsDirectory(const wstring& path)
 	const DWORD attrs = GetFileAttributesW(path.c_str());
 	return (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_DIRECTORY));
 }
+
 bool IsDirectory(const string& path)
 {
 	const DWORD attrs = GetFileAttributesA(path.c_str());
@@ -32,6 +34,7 @@ bool IsFile(const wstring& path)
 	const DWORD attrs = GetFileAttributesW(path.c_str());
 	return (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY));
 }
+
 bool IsFile(const string& path)
 {
 	const DWORD attrs = GetFileAttributesA(path.c_str());
@@ -132,7 +135,7 @@ string GetExtension(const string& path, bool includeDot)
  * @param filename	[in/out] Filename.
  * @param ext		[in] New extension, with leading dot.
  */
-void ReplaceFileExtension(string &filename, const char *ext)
+void ReplaceFileExtension(string& filename, const char* ext)
 {
 	assert(ext != nullptr);
 
