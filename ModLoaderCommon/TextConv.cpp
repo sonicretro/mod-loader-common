@@ -104,7 +104,7 @@ char* UTF8to1252(const char* utf8)
  * @param short target codepage.
  * @return Windows-1252 etc. text (allocated via new[]), or nullptr on error.
  */
-char* UTF8toCodepage(const char* utf8, short codepage)
+char* UTF8toCodepage(const char* utf8, unsigned int codepage)
 {
 	return MBStoMBS(utf8, CP_UTF8, codepage);
 }
@@ -205,7 +205,7 @@ string UTF8to1252(const string& utf8)
  * @param short target codepage.
  * @return Windows-1252 etc. text, or empty string on error.
  */
-string UTF8toCodepage(const string& utf8, short codepage)
+string UTF8toCodepage(const string& utf8, unsigned int codepage)
 {
 	return MBStoMBS(utf8, CP_UTF8, codepage);
 }

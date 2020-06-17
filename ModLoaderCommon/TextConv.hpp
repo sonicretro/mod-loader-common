@@ -55,7 +55,7 @@ char* UTF8to1252(const char* utf8);
  * @param short target codepage.
  * @return Windows-1252 etc. text (allocated via new[]), or nullptr on error.
  */
-char* UTF8toCodepage(const char* utf8, short codepage);
+char* UTF8toCodepage(const char* utf8, unsigned int codepage);
 
 #ifdef __cplusplus
 }
@@ -108,7 +108,7 @@ std::string UTF8to1252(const std::string& utf8);
  * @param short target codepage.
  * @return Windows-1252 etc. text, or empty string on error.
  */
-std::string UTF8toCodepage(const std::string& utf8, short codepage);
+std::string UTF8toCodepage(const std::string& utf8, unsigned int codepage);
 
 #endif /* __cplusplus */
 
