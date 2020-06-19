@@ -49,6 +49,14 @@ char* UTF8toSJIS(const char* utf8);
  */
 char* UTF8to1252(const char* utf8);
 
+/**
+ * Convert UTF-8 text to a Windows codepage text.
+ * @param utf8 UTF-8 text, null-terminated.
+ * @param short target codepage.
+ * @return Windows-1252 etc. text (allocated via new[]), or nullptr on error.
+ */
+char* UTF8toCodepage(const char* utf8, unsigned int codepage);
+
 #ifdef __cplusplus
 }
 
@@ -93,6 +101,14 @@ std::string UTF8toSJIS(const std::string& utf8);
  * @return Windows-1252 text, or empty string on error.
  */
 std::string UTF8to1252(const std::string& utf8);
+
+/**
+ * Convert UTF-8 text to a Windows codepage text.
+ * @param utf8 UTF-8 text,
+ * @param short target codepage.
+ * @return Windows-1252 etc. text, or empty string on error.
+ */
+std::string UTF8toCodepage(const std::string& utf8, unsigned int codepage);
 
 #endif /* __cplusplus */
 

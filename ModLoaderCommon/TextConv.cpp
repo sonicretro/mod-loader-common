@@ -98,6 +98,17 @@ char* UTF8to1252(const char* utf8)
 	return MBStoMBS(utf8, CP_UTF8, 1252);
 }
 
+/**
+ * Convert UTF-8 text to a Windows codepage text.
+ * @param utf8 UTF-8 text, null-terminated.
+ * @param short target codepage.
+ * @return Windows-1252 etc. text (allocated via new[]), or nullptr on error.
+ */
+char* UTF8toCodepage(const char* utf8, unsigned int codepage)
+{
+	return MBStoMBS(utf8, CP_UTF8, codepage);
+}
+
 /** C++ wrappers. **/
 
 #include <string>
@@ -186,4 +197,15 @@ string UTF8toSJIS(const string& utf8)
 string UTF8to1252(const string& utf8)
 {
 	return MBStoMBS(utf8, CP_UTF8, 1252);
+}
+
+/**
+ * Convert UTF-8 text to a Windows codepage text.
+ * @param utf8 UTF-8 text,
+ * @param short target codepage.
+ * @return Windows-1252 etc. text, or empty string on error.
+ */
+string UTF8toCodepage(const string& utf8, unsigned int codepage)
+{
+	return MBStoMBS(utf8, CP_UTF8, codepage);
 }
