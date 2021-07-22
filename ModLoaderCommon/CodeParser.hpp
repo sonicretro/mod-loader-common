@@ -50,6 +50,8 @@ public:
 		or8, or16, or32,
 		xor8, xor16, xor32,
 		writenop,
+		writejump,
+		writecall,
 		writeoff,
 		ifeq8, ifeq16, ifeq32, ifeqfloat,
 		ifne8, ifne16, ifne32, ifnefloat,
