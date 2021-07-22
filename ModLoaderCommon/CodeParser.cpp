@@ -182,7 +182,7 @@ inline BOOL WriteData(T* writeaddress, const T& data)
 template <typename T, size_t N>
 inline BOOL WriteData(void* writeaddress, const T (&data)[N], SIZE_T* byteswritten)
 {
-	return WriteData(writeaddress, data, SizeOfArray(data), byteswritten);
+	return WriteData(writeaddress, data, sizeof(T) * N, byteswritten);
 }
 
 template <typename T, size_t N>
