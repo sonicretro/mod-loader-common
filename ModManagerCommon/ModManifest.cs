@@ -411,6 +411,49 @@ namespace ModManagerCommon
 		{
 			File.WriteAllLines(filePath, manifest.Select(x => x.ToString()));
 		}
+
+		/// <summary>
+		/// Get all distinct directories from an old manifest which no longer exist in a new manifest.
+		/// </summary>
+		/// <param name="oldManifest">The old manifest.</param>
+		/// <param name="newManifest">The new manifest.</param>
+		/// <returns>
+		/// All distinct directories exclusive to <paramref name="oldManifest"/> in descending order
+		/// sorted by number of directory separators, with platform-agnostic directory separators
+		/// replaced with <see cref="Path.DirectorySeparatorChar"/>.
+		/// </returns>
+		public static IEnumerable<string> GetOldDirectories(IEnumerable<ModManifestEntry> oldManifest, IEnumerable<ModManifestEntry> newManifest)
+		{
+			IEnumerable<string> GetDistinctPaths(IEnumerable<ModManifestEntry> manifest)
+			{
+				return manifest.Select(x => Path.GetDirectoryName(x.FilePath))
+				               .Where(s => !string.IsNullOrEmpty(s))
+				               .Select(s => s.Replace('/', Path.DirectorySeparatorChar))
+				               .Distinct(StringComparer.OrdinalIgnoreCase);
+			}
+
+			var newDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+			// Collect all directories (and their parent directories) from the new manifest.
+			foreach (string newPath in GetDistinctPaths(newManifest))
+			{
+				string path = newPath;
+
+				do
+				{
+					// FIXME: We could probably bail out of this loop early if Add returns false.
+					// Very minor performance optimization; don't have time to test.
+					newDirectories.Add(path);
+
+					// Keep asking for and adding the parent directory until there isn't one.
+					path = Path.GetDirectoryName(path);
+				} while (!string.IsNullOrEmpty(path));
+			}
+
+			// Return all directories that exist only in the old manifest.
+			return GetDistinctPaths(oldManifest).Where(s => !newDirectories.Contains(s))
+			                                    .OrderByDescending(s => s.Count(c => c == Path.DirectorySeparatorChar));
+		}
 	}
 
 	/// <summary>
