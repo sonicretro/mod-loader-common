@@ -33,12 +33,11 @@
 			this.labelStep = new System.Windows.Forms.Label();
 			this.buttonCancel = new System.Windows.Forms.Button();
 			this.SuspendLayout();
-			// 
-			// progressBar
-			// 
-			this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.progressBar.Location = new System.Drawing.Point(12, 39);
+            // 
+            // progressBar
+            // 
+            this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressBar.Location = new System.Drawing.Point(12, 39);
 			this.progressBar.Maximum = 2147483646;
 			this.progressBar.Name = "progressBar";
 			this.progressBar.Size = new System.Drawing.Size(344, 23);
@@ -82,7 +81,8 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.buttonCancel;
-			this.ClientSize = new System.Drawing.Size(368, 103);
+            this.AutoSize = true;
+            this.ClientSize = new System.Drawing.Size(368, 103);
 			this.ControlBox = false;
 			this.Controls.Add(this.buttonCancel);
 			this.Controls.Add(this.labelStep);
