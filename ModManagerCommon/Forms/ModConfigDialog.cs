@@ -267,10 +267,10 @@ namespace ModManagerCommon.Forms
 					settings.SetPropertyValue(groupName,propertyName, value.ToString());
 					break;
 				case "int":
-					settings.SetPropertyValue(groupName,propertyName, Math.Max(iminval, Math.Min(imaxval, (long)value)).ToString());
+					settings.SetPropertyValue(groupName,propertyName, Math.Max(iminval, Math.Min(imaxval, (long)value)).ToString(NumberFormatInfo.InvariantInfo));
 					break;
 				case "float":
-					settings.SetPropertyValue(groupName, propertyName, Math.Max(fminval, Math.Min(fmaxval, (double)value)).ToString());
+					settings.SetPropertyValue(groupName, propertyName, Math.Max(fminval, Math.Min(fmaxval, (double)value)).ToString(NumberFormatInfo.InvariantInfo));
 					break;
 				default:
 					if (value is string)
