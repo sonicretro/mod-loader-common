@@ -84,7 +84,7 @@ namespace ModManagerCommon.Forms
 								OnDownloadProgress(this, downloadArgs);
 								if (downloadArgs.Cancel)
 								{
-									((WebClient)sender).CancelAsync();
+									client.CancelAsync();
 								}
 							}
 
