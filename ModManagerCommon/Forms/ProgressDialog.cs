@@ -5,6 +5,14 @@ namespace ModManagerCommon.Forms
 {
 	public partial class ProgressDialog : Form
 	{
+		/// <summary>
+		/// Parameterless constructor to prevent the WinForms Editor from crashing on forms inheriting this one.
+		/// </summary>
+		public ProgressDialog()
+		{
+			InitializeComponent();
+		}
+
 		public event EventHandler CancelEvent;
 		#region Accessors
 
