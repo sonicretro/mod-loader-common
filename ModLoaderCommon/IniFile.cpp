@@ -580,7 +580,7 @@ bool IniFile::removeKey(const string& section, const string& key)
 */
 void IniFile::save(const string& filename) const
 {
-	FILE* f = fopen(filename.c_str(), "r");
+	FILE* f = fopen(filename.c_str(), "w");
 	if (!f)
 		return;
 
@@ -594,7 +594,7 @@ void IniFile::save(const string& filename) const
 */
 void IniFile::save(const wstring& filename) const
 {
-	FILE* f = _wfopen(filename.c_str(), L"r");
+	FILE* f = _wfopen(filename.c_str(), L"w");
 	if (!f)
 		return;
 
@@ -818,10 +818,16 @@ string IniFile::escape(const string& str, bool sec, bool key)
 					result.insert(i++, "\\");
 				break;
 			case '\\':
-			case '\n':
-			case '\r':
 			case ';':
 				result.insert(i++, "\\");
+				break;
+			case '\n':
+				result.insert(i++, "\\");
+				result[i] = 'n';
+				break;
+			case '\r':
+				result.insert(i++, "\\");
+				result[i] = 'r';
 				break;
 
 			default:
