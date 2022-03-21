@@ -16,18 +16,22 @@ namespace ModManagerCommon
 		/// The file is unchanged.
 		/// </summary>
 		Unchanged,
+
 		/// <summary>
 		/// Indicates that a file has been moved, renamed, or both.
 		/// </summary>
 		Moved,
+
 		/// <summary>
 		/// The file has been modified in some way.
 		/// </summary>
 		Changed,
+
 		/// <summary>
 		/// The file has been added to the new manifest.
 		/// </summary>
 		Added,
+
 		/// <summary>
 		/// The file has been removed from the new manifest.
 		/// </summary>
@@ -45,10 +49,12 @@ namespace ModManagerCommon
 		/// </summary>
 		/// <seealso cref="ModManifestState"/>
 		public readonly ModManifestState State;
+
 		/// <summary>
 		/// The newer of the two entries.
 		/// </summary>
 		public readonly ModManifestEntry Current;
+
 		/// <summary>
 		/// The older of the two entries.
 		/// </summary>
@@ -103,16 +109,25 @@ namespace ModManagerCommon
 		{
 			if (!Directory.Exists(modPath))
 			{
-				throw new DirectoryNotFoundException();
+				throw new DirectoryNotFoundException($"Directory does not exist: {modPath}");
 			}
 
 			var result = new List<ModManifestEntry>();
 
+			bool FileIndexFilter(string filePath)
+			{
+				if (string.IsNullOrEmpty(filePath))
+				{
+					return false;
+				}
+
+				string fileName = Path.GetFileName(filePath);
+				return !fileName.Equals("mod.manifest") && !fileName.Equals("mod.version");
+			}
+
 			List<string> fileIndex = Directory.EnumerateFiles(modPath, "*", SearchOption.AllDirectories)
-				.Where(x => !string.IsNullOrEmpty(x) &&
-				            !Path.GetFileName(x).Equals("mod.manifest") &&
-				            !Path.GetFileName(x).Equals("mod.version"))
-				.ToList();
+			                                  .Where(FileIndexFilter)
+			                                  .ToList();
 
 			if (fileIndex.Count < 1)
 			{
@@ -123,12 +138,11 @@ namespace ModManagerCommon
 
 			int index = 0;
 
-			foreach (string f in fileIndex)
+			foreach (string filePath in fileIndex)
 			{
-				string relativePath = f.Substring(modPath.Length + 1);
-				FileInfo file = GetFileInfo(f);
-
 				++index;
+				string relativePath = filePath.Substring(modPath.Length + 1);
+				FileInfo fileInfo = GetFileInfo(filePath);
 
 				var args = new FileHashEventArgs(relativePath, index, fileIndex.Count);
 				OnFileHashStart(args);
@@ -138,7 +152,7 @@ namespace ModManagerCommon
 					return null;
 				}
 
-				string hash = GetFileHash(f);
+				string hash = GetFileHash(filePath);
 
 				args = new FileHashEventArgs(relativePath, index, fileIndex.Count);
 				OnFileHashEnd(args);
@@ -148,43 +162,53 @@ namespace ModManagerCommon
 					return null;
 				}
 
-				result.Add(new ModManifestEntry(relativePath, file.Length, hash));
+				result.Add(new ModManifestEntry(relativePath, fileInfo.Length, hash));
 			}
 
+			result.TrimExcess();
 			return result;
 		}
 
 		/// <summary>
 		/// Follows symbolic links and constructs a <see cref="FileInfo"/> of the actual file.
 		/// </summary>
-		/// <param name="path">Path to the file.</param>
+		/// <param name="filePath">Path to the file.</param>
 		/// <returns>The <seealso cref="FileInfo"/> of the real file.</returns>
-		private static FileInfo GetFileInfo(string path)
+		private static FileInfo GetFileInfo(string filePath)
 		{
-			var file = new FileInfo(path);
+			var fileInfo = new FileInfo(filePath);
 
-			if ((file.Attributes & FileAttributes.ReparsePoint) != 0)
+			if ((fileInfo.Attributes & FileAttributes.ReparsePoint) == 0)
 			{
-				string reparsed;
-
-				try
-				{
-					reparsed = NativeMethods.GetFinalPathName(path);
-				}
-				catch (Win32Exception ex)
-				{
-					if (ex.NativeErrorCode == 2)
-					{
-						throw new FileNotFoundException();
-					}
-
-					throw;
-				}
-
-				file = new FileInfo(reparsed.Replace(@"\\?\", null));
+				return fileInfo;
 			}
 
-			return file;
+			string reparsed;
+
+			try
+			{
+				reparsed = NativeMethods.GetFinalPathName(filePath);
+			}
+			catch (Win32Exception ex)
+			{
+				if (ex.NativeErrorCode == 2)
+				{
+					throw new FileNotFoundException($"Failed to retrieve final path for symbolic link: {filePath}", filePath);
+				}
+
+				throw;
+			}
+
+			const string prefix = @"\\?\";
+
+			if (reparsed.StartsWith(prefix))
+			{
+				reparsed = reparsed.Substring(prefix.Length);
+			}
+
+			fileInfo = new FileInfo(reparsed);
+
+			return fileInfo;
 		}
 
 		/// <summary>
@@ -264,7 +288,7 @@ namespace ModManagerCommon
 		/// <returns>A list of <see cref="ModManifestDiff"/> containing change information.</returns>
 		public List<ModManifestDiff> Verify(string modPath, List<ModManifestEntry> manifest)
 		{
-			var result = new List<ModManifestDiff>();
+			var result = new List<ModManifestDiff>(manifest.Count);
 			int index = 0;
 
 			foreach (ModManifestEntry m in manifest)
@@ -308,6 +332,7 @@ namespace ModManagerCommon
 					}
 
 					string hash = GetFileHash(filePath);
+
 					if (!hash.Equals(m.Checksum, StringComparison.InvariantCultureIgnoreCase))
 					{
 						result.Add(new ModManifestDiff(ModManifestState.Changed, m, null));
@@ -418,9 +443,9 @@ namespace ModManagerCommon
 		/// <param name="oldManifest">The old manifest.</param>
 		/// <param name="newManifest">The new manifest.</param>
 		/// <returns>
-		/// All distinct directories exclusive to <paramref name="oldManifest"/> in descending order
-		/// sorted by number of directory separators, with platform-agnostic directory separators
-		/// replaced with <see cref="Path.DirectorySeparatorChar"/>.
+		/// All distinct directories exclusive to <paramref name="oldManifest"/> sorted by number of
+		/// directory separators in descending order (deepest directory first), with all platform-agnostic
+		/// directory separators replaced with <see cref="Path.DirectorySeparatorChar"/>.
 		/// </returns>
 		public static IEnumerable<string> GetOldDirectories(IEnumerable<ModManifestEntry> oldManifest, IEnumerable<ModManifestEntry> newManifest)
 		{
@@ -442,9 +467,12 @@ namespace ModManagerCommon
 
 					do
 					{
-						// FIXME: We could probably bail out of this loop early if Add returns false.
-						// Very minor performance optimization; don't have time to test.
-						directories.Add(path);
+						// If the directory is already in the set (Add() returns false), then
+						// so too are all of its parent directories, and we can stop iterating.
+						if (!directories.Add(path))
+						{
+							break;
+						}
 
 						// Keep asking for and adding the parent directory until there isn't one.
 						path = Path.GetDirectoryName(path);
@@ -454,7 +482,7 @@ namespace ModManagerCommon
 				return directories;
 			}
 
-			// Collect all directories and their parent directories 
+			// Collect all directories and their parent directories for both manifests.
 			HashSet<string> newDirectories = GetAllDirectoriesRecursively(newManifest);
 			HashSet<string> oldDirectories = GetAllDirectoriesRecursively(oldManifest);
 
@@ -473,10 +501,12 @@ namespace ModManagerCommon
 		/// The name/path of the file relative to the root of the mod directory.
 		/// </summary>
 		public readonly string FilePath;
+
 		/// <summary>
 		/// The size of the file in bytes.
 		/// </summary>
 		public readonly long FileSize;
+
 		/// <summary>
 		/// String representation of the SHA-256 checksum of the file.
 		/// </summary>
@@ -495,6 +525,7 @@ namespace ModManagerCommon
 		public ModManifestEntry(string line)
 		{
 			string[] fields = line.Split('\t');
+
 			if (fields.Length != 3)
 			{
 				throw new ArgumentException($"Manifest line must have 3 fields. Provided: {fields.Length}", nameof(line));
