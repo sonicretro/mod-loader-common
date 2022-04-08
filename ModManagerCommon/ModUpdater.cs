@@ -98,7 +98,7 @@ namespace ModManagerCommon
 
 				if (!ForceUpdate && localVersion.HasValue)
 				{
-					DateTime uploaded = DateTime.Parse(asset.Uploaded);
+					DateTime uploaded = DateTime.Parse(asset.Uploaded, null, DateTimeStyles.RoundtripKind);
 
 					if (localVersion >= uploaded)
 					{
