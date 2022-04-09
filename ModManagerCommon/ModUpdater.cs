@@ -24,8 +24,8 @@ namespace ModManagerCommon
 			{
 				string dateString = File.ReadAllText(versionPath).Trim();
 
-				if (DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date) ||
-				    DateTime.TryParse(dateString, CultureInfo.CurrentCulture, DateTimeStyles.None, out date))
+				if (DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out DateTime date) ||
+				    DateTime.TryParse(dateString, CultureInfo.CurrentCulture, DateTimeStyles.AssumeLocal, out date))
 				{
 					localVersion = date;
 				}
@@ -98,8 +98,8 @@ namespace ModManagerCommon
 
 				if (!ForceUpdate && localVersion.HasValue)
 				{
-					DateTime uploaded = DateTime.Parse(asset.Uploaded, null, DateTimeStyles.RoundtripKind);
-
+					DateTime uploaded = DateTime.Parse(asset.Uploaded, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal);
+					
 					if (localVersion >= uploaded)
 					{
 						// No updates available.
