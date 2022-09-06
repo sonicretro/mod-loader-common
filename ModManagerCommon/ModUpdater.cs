@@ -15,9 +15,11 @@ namespace ModManagerCommon
 		private readonly Dictionary<string, List<GitHubRelease>> gitHubCache = new Dictionary<string, List<GitHubRelease>>();
 		public bool ForceUpdate;
 
-		private static DateTime? GetLocalVersion(string folder)
+		private static DateTime? GetLocalVersion(string folder, string basePath = null)
 		{
 			string versionPath = Path.Combine("mods", folder, "mod.version");
+			if (basePath != null)
+				versionPath = Path.Combine(basePath, versionPath);
 			DateTime? localVersion = null;
 
 			if (File.Exists(versionPath))
@@ -33,7 +35,7 @@ namespace ModManagerCommon
 
 			if (!localVersion.HasValue)
 			{
-				var info = new FileInfo(Path.Combine("mods", folder, "mod.manifest"));
+				var info = new FileInfo(basePath == null ? Path.Combine("mods", folder, "mod.manifest") : Path.Combine(basePath, "mods", folder, "mod.manifest"));
 				if (info.Exists)
 				{
 					localVersion = info.LastWriteTimeUtc;
@@ -43,7 +45,7 @@ namespace ModManagerCommon
 			return localVersion;
 		}
 
-		public ModDownload GetGitHubReleases(ModInfo mod, string folder, UpdaterWebClient client, List<string> errors)
+		public ModDownload GetGitHubReleases(ModInfo mod, string folder, UpdaterWebClient client, List<string> errors, string basePath = null)
 		{
 			List<GitHubRelease> releases;
 			string url = "https://api.github.com/repos/" + mod.GitHubRepo + "/releases";
@@ -79,7 +81,7 @@ namespace ModManagerCommon
 				return null;
 			}
 
-			DateTime? localVersion = GetLocalVersion(folder);
+			DateTime? localVersion = GetLocalVersion(folder, basePath);
 
 			GitHubRelease latestRelease = null;
 			GitHubAsset latestAsset = null;
@@ -124,7 +126,7 @@ namespace ModManagerCommon
 
 			string body = Regex.Replace(latestRelease.Body, "(?<!\r)\n", "\r\n");
 
-			return new ModDownload(mod, Path.Combine("mods", folder), latestAsset.DownloadUrl, body, latestAsset.Size)
+			return new ModDownload(mod, basePath == null ? Path.Combine("mods", folder) : Path.Combine(basePath, "mods", folder), latestAsset.DownloadUrl, body, latestAsset.Size)
 			{
 				HomePage   = "https://github.com/" + mod.GitHubRepo,
 				Name       = latestRelease.Name,
@@ -135,7 +137,7 @@ namespace ModManagerCommon
 			};
 		}
 
-		public ModDownload GetGameBananaReleases(ModInfo mod, string folder, List<string> errors)
+		public ModDownload GetGameBananaReleases(ModInfo mod, string folder, List<string> errors, string basePath = null)
 		{
 			GameBananaItem gbi;
 			try
@@ -155,7 +157,7 @@ namespace ModManagerCommon
 			}
 
 			GameBananaItemUpdate latestUpdate = gbi.Updates[0];
-			DateTime? localVersion = GetLocalVersion(folder);
+			DateTime? localVersion = GetLocalVersion(folder, basePath);
 
 			if (!ForceUpdate && localVersion.HasValue)
 			{
@@ -170,7 +172,7 @@ namespace ModManagerCommon
 
 			GameBananaItemFile dl = gbi.Files.First().Value;
 
-			return new ModDownload(mod, Path.Combine("mods", folder), dl.DownloadUrl, body, dl.Filesize)
+			return new ModDownload(mod, basePath == null ? Path.Combine("mods", folder) : Path.Combine(basePath, "mods", folder), dl.DownloadUrl, body, dl.Filesize)
 			{
 				HomePage   = gbi.ProfileUrl,
 				Name       = latestUpdate.Title,
@@ -182,7 +184,7 @@ namespace ModManagerCommon
 		}
 
 		public ModDownload CheckModularVersion(ModInfo mod, string folder, List<ModManifestEntry> localManifest,
-		                                       UpdaterWebClient client, List<string> errors)
+		                                       UpdaterWebClient client, List<string> errors, string basePath = null)
 		{
 			if (!mod.UpdateUrl.StartsWith("http://", StringComparison.InvariantCulture)
 				&& !mod.UpdateUrl.StartsWith("https://", StringComparison.InvariantCulture))
@@ -278,7 +280,7 @@ namespace ModManagerCommon
 				changes = Regex.Replace(changes, "(?<!\r)\n", "\r\n");
 			}
 
-			return new ModDownload(mod, Path.Combine("mods", folder), mod.UpdateUrl, changes, diff);
+			return new ModDownload(mod, basePath == null ? Path.Combine("mods", folder) : Path.Combine(basePath, "mods", folder), mod.UpdateUrl, changes, diff);
 		}
 
 		// TODO: cancel
@@ -290,7 +292,7 @@ namespace ModManagerCommon
 		/// <param name="errors">Output list of errors encountered during the update process.</param>
 		/// <param name="cancellationToken"><see cref="CancellationToken"/> for cancelling the operation. Currently unused.</param>
 		public void GetModUpdates(List<KeyValuePair<string, ModInfo>> updatableMods,
-		                          out List<ModDownload> updates, out List<string> errors, CancellationToken cancellationToken)
+		                          out List<ModDownload> updates, out List<string> errors, CancellationToken cancellationToken, string baseFolder = null)
 		{
 			updates = new List<ModDownload>();
 			errors = new List<string>();
@@ -313,7 +315,7 @@ namespace ModManagerCommon
 							continue;
 						}
 
-						ModDownload d = GetGitHubReleases(mod, info.Key, client, errors);
+						ModDownload d = GetGitHubReleases(mod, info.Key, client, errors, baseFolder);
 						if (d != null)
 						{
 							updates.Add(d);
@@ -321,7 +323,7 @@ namespace ModManagerCommon
 					}
 					else if (!string.IsNullOrEmpty(mod.GameBananaItemType) && mod.GameBananaItemId.HasValue)
 					{
-						ModDownload d = GetGameBananaReleases(mod, info.Key, errors);
+						ModDownload d = GetGameBananaReleases(mod, info.Key, errors, baseFolder);
 						if (d != null)
 						{
 							updates.Add(d);
@@ -331,6 +333,8 @@ namespace ModManagerCommon
 					{
 						List<ModManifestEntry> localManifest = null;
 						string manPath = Path.Combine("mods", info.Key, "mod.manifest");
+						if (baseFolder != null)
+							manPath = Path.Combine(baseFolder, manPath);
 
 						if (!ForceUpdate && File.Exists(manPath))
 						{
@@ -345,7 +349,7 @@ namespace ModManagerCommon
 							}
 						}
 
-						ModDownload d = CheckModularVersion(mod, info.Key, localManifest, client, errors);
+						ModDownload d = CheckModularVersion(mod, info.Key, localManifest, client, errors, baseFolder);
 						if (d != null)
 						{
 							updates.Add(d);
