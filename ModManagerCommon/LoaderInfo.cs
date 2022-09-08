@@ -27,6 +27,9 @@ namespace ModManagerCommon
 		[DefaultValue(0)] public long UpdateTime { get; set; }
 		[DefaultValue(0)] public long ModUpdateTime { get; set; }
 
+		[DefaultValue(true)]
+		public bool AutoClose { get; set; } = true;
+
 		[IniName("Mod")]
 		[IniCollection(IniCollectionMode.NoSquareBrackets, StartIndex = 1)]
 		public List<string> Mods { get; set; }
