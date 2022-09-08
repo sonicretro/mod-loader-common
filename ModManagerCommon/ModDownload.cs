@@ -59,7 +59,7 @@ namespace ModManagerCommon
 		public string   Name     = string.Empty;
 		public string   Version  = string.Empty;
 		public DateTime Published;
-		public DateTime Updated;
+		public DateTime Updated  = DateTime.Now;
 		public string   ReleaseUrl = string.Empty;
 
 		public event CancelEventHandler DownloadStarted;
@@ -255,6 +255,7 @@ namespace ModManagerCommon
 							File.Delete(filePath);
 						}
 
+						File.WriteAllText(Path.Combine(Folder, "mod.version"), Updated.ToString(DateTimeFormatInfo.InvariantInfo));
 						return;
 					}
 
