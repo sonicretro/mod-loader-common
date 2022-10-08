@@ -232,6 +232,11 @@ namespace ModManagerCommon
 				// First, check for an exact match. File path/name, hash, size; everything.
 				ModManifestEntry exact = old.FirstOrDefault(x => Equals(x, entry));
 
+				if (entry.FilePath == "config.ini")
+				{
+					continue;
+				}
+
 				if (exact != null)
 				{
 					old.Remove(exact);
