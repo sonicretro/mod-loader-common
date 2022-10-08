@@ -203,7 +203,10 @@ namespace ModManagerCommon
 						}
 					}
 
-					string dataDir = Path.Combine(updatePath, Path.GetFileNameWithoutExtension(filePath));
+					string dataDir = Path.GetFileNameWithoutExtension(filePath);
+					if (dataDir.Length > 20)
+						dataDir = dataDir.Remove(20).TrimEnd(' ');
+					dataDir = Path.Combine(updatePath, dataDir);
 					if (!Directory.Exists(dataDir))
 					{
 						Directory.CreateDirectory(dataDir);
