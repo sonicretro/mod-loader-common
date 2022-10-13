@@ -101,6 +101,7 @@
     <Compile Include="IniFile.cs" />
     <Compile Include="IniSerializer.cs" />
     <Compile Include="LoaderInfo.cs" />
+    <Compile Include="ModDependency.cs" />
     <Compile Include="ModDownload.cs" />
     <Compile Include="ModInfo.cs" />
     <Compile Include="ModManifest.cs" />

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using IniFile;
 
 namespace ModManagerCommon
 {
@@ -18,6 +19,9 @@ namespace ModManagerCommon
 		public string ChangelogUrl { get; set; }
 		public string GameBananaItemType { get; set; }
 		public long? GameBananaItemId { get; set; }
+		[IniName("Dependency")]
+		[IniCollection(IniCollectionMode.NoSquareBrackets, StartIndex = 1)]
+		public List<string> Dependencies { get; set; }
 
 		public static IEnumerable<string> GetModFiles(DirectoryInfo directoryInfo)
 		{
