@@ -10,6 +10,7 @@ namespace ModManagerCommon
 	public class ModDependency
 	{
 		public string ID { get; set; }
+		public string Folder { get; set; }
 		public string Name { get; set; }
 		public string Link { get; set; }
 
@@ -18,14 +19,17 @@ namespace ModManagerCommon
 			string[] strings = depdency.Split('|');
 
 			ID = strings[0];
-			Name = strings[1];
-			Link = strings[2];
+			Folder = strings[1];
+			Name = strings[2];
+			Link = strings[3];
 		}
 
 		public string GetDependencyName()
 		{
 			if (Name != "")
 				return Name;
+			else if (Folder != "")
+				return Folder;
 			else if (ID != "")
 				return ID;
 			else

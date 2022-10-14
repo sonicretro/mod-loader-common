@@ -19,6 +19,7 @@ namespace ModManagerCommon
 		public string ChangelogUrl { get; set; }
 		public string GameBananaItemType { get; set; }
 		public long? GameBananaItemId { get; set; }
+		public string ModID { get; set; }
 		[IniName("Dependency")]
 		[IniCollection(IniCollectionMode.NoSquareBrackets, StartIndex = 1)]
 		public List<string> Dependencies { get; set; }
