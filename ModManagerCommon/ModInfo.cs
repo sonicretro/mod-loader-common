@@ -9,9 +9,11 @@ namespace ModManagerCommon
 		public string Name { get; set; }
 		public string Category { get; set; }
 		public string Author { get; set; }
+		public string AuthorURL { get; set; }
 		public string Version { get; set; }
 		public string Description { get; set; }
 		public string DLLFile { get; set; }
+		public string SourceCode { get; set; }
 		public string Codes { get; set; }
 		public string GitHubRepo { get; set; }
 		public string GitHubAsset { get; set; }
@@ -23,8 +25,9 @@ namespace ModManagerCommon
 		[IniName("Dependency")]
 		[IniCollection(IniCollectionMode.NoSquareBrackets, StartIndex = 1)]
 		public List<string> Dependencies { get; set; }
+        public bool DisableUpdate { get; set; }
 
-		public static IEnumerable<string> GetModFiles(DirectoryInfo directoryInfo)
+        public static IEnumerable<string> GetModFiles(DirectoryInfo directoryInfo)
 		{
 			string modini = Path.Combine(directoryInfo.FullName, "mod.ini");
 			if (File.Exists(modini))

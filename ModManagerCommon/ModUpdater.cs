@@ -307,7 +307,13 @@ namespace ModManagerCommon
 				foreach (KeyValuePair<string, ModInfo> info in updatableMods)
 				{
 					ModInfo mod = info.Value;
-					if (!string.IsNullOrEmpty(mod.GitHubRepo))
+
+                    if (mod.DisableUpdate == true)
+                    {
+                        continue;
+                    }
+
+                    if (!string.IsNullOrEmpty(mod.GitHubRepo))
 					{
 						if (string.IsNullOrEmpty(mod.GitHubAsset))
 						{
