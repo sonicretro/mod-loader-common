@@ -4,15 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace ModManagerCommon
 {
-
     [XmlRoot(Namespace = "http://www.sonicretro.org")]
     public class CodeList
     {
         static readonly XmlSerializer serializer = new XmlSerializer(typeof(CodeList));
-
         public static CodeList Load(string filename)
         {
             if (Path.GetExtension(filename).Equals(".xml", StringComparison.OrdinalIgnoreCase))
@@ -60,13 +59,19 @@ namespace ModManagerCommon
                             case "Author":
                                 lastIndex = result.Codes.Count - 1;
                                 code = result.Codes[lastIndex];
-                                ProcessAuthorLine(filename, linenum, split, code);
+                                ProcessAuthorLine(split, code);
                                 result.Codes[lastIndex] = code;
                                 break;
                             case "Description":
                                 lastIndex = result.Codes.Count - 1;
                                 code = result.Codes[lastIndex];
-                                ProcessDescriptionLine(filename, linenum, split, code);
+                                ProcessDescriptionLine(split, code);
+                                result.Codes[lastIndex] = code;
+                                break;
+                            case "Category":
+                                lastIndex = result.Codes.Count - 1;
+                                code = result.Codes[lastIndex];
+                                ProcessCategoryLine(split, code);
                                 result.Codes[lastIndex] = code;
                                 break;
                             default:
@@ -161,10 +166,11 @@ namespace ModManagerCommon
                 }
         }
 
-        private static void ProcessAuthorLine(string filename, int linenum, string[] split, Code code)
+        private static System.Text.StringBuilder fixFormatting(string[] split, Code code)
         {
             var sb = new System.Text.StringBuilder(split[1].TrimStart('"'));
             int i = 2;
+
             if (!split[1].EndsWith("\""))
                 for (; i < split.Length; i++)
                 {
@@ -177,26 +183,25 @@ namespace ModManagerCommon
                     }
                 }
 
+            return sb;
+        }
+
+        private static void ProcessAuthorLine(string[] split, Code code)
+        {
+            var sb = fixFormatting(split, code);
             code.Author = sb.ToString().TrimEnd('"');
         }
 
-        private static void ProcessDescriptionLine(string filename, int linenum, string[] split, Code code)
+        private static void ProcessDescriptionLine(string[] split, Code code)
         {
-            var sb = new System.Text.StringBuilder(split[1].TrimStart('"'));
-            int i = 2;
-            if (!split[1].EndsWith("\""))
-                for (; i < split.Length; i++)
-                {
-                    sb.AppendFormat(" {0}", split[i]);
-
-                    if (split[i].EndsWith("\""))
-                    {
-                        ++i;
-                        break;
-                    }
-                }
-
+            var sb = fixFormatting(split, code);
             code.Description = sb.ToString().TrimEnd('"');
+        }
+
+        private static void ProcessCategoryLine(string[] split, Code code)
+        {
+            var sb = fixFormatting(split, code);
+            code.Category = sb.ToString().TrimEnd('"');
         }
 
         public void Save(string filename)
@@ -343,6 +348,8 @@ namespace ModManagerCommon
         public string Name { get; set; }
         [XmlAttribute("author")]
         public string Author { get; set; }
+        [XmlAttribute("category")]
+        public string Category { get; set; }
         [XmlAttribute("description")]
         public string Description { get; set; }
         [XmlAttribute("required")]
