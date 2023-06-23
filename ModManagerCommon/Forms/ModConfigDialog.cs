@@ -40,7 +40,9 @@ namespace ModManagerCommon.Forms
 
 		private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
 		{
-			resetToolStripMenuItem.Enabled = propertyGrid1.SelectedGridItem.PropertyDescriptor.CanResetValue(settings);
+			if (propertyGrid1.SelectedGridItem != null && propertyGrid1.SelectedGridItem.PropertyDescriptor != null)
+				resetToolStripMenuItem.Enabled = propertyGrid1.SelectedGridItem.PropertyDescriptor.CanResetValue(settings);
+			else resetToolStripMenuItem.Enabled = false;
 		}
 
 		private void resetToolStripMenuItem_Click(object sender, EventArgs e)
