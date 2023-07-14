@@ -47,7 +47,8 @@ namespace ModManagerCommon
 	public class ModDownload
 	{
 		public ModInfo Info { get; }
-		public readonly ModDownloadType Type;
+        public bool IsChecked { get; set; }
+        public readonly ModDownloadType Type;
 		public readonly string Url;
 		public readonly string Folder;
 		public readonly string Changes;
