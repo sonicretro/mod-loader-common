@@ -18,6 +18,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <list>
+#include <stdexcept>
 using std::transform;
 using std::string;
 using std::unordered_map;
