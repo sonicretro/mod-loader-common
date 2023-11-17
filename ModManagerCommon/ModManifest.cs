@@ -122,8 +122,7 @@ namespace ModManagerCommon
 				}
 
 				string fileName = Path.GetFileName(filePath);
-				return !fileName.Equals("mod.manifest", StringComparison.OrdinalIgnoreCase) &&
-				       !fileName.Equals("mod.version", StringComparison.OrdinalIgnoreCase);
+				return !fileName.Equals("mod.manifest") && !fileName.Equals("mod.version");
 			}
 
 			List<string> fileIndex = Directory.EnumerateFiles(modPath, "*", SearchOption.AllDirectories)
@@ -222,112 +221,65 @@ namespace ModManagerCommon
 		{
 			// TODO: handle copies instead of moves to reduce download requirements (or cache downloads by hash?)
 
-			int oldManifestEntryCount = oldManifest?.Count ?? 0;
-
 			var result = new List<ModManifestDiff>();
 
-			var oldSet = new HashSet<ModManifestEntry>(oldManifestEntryCount);
-			var oldByPath = new Dictionary<string, ModManifestEntry>(oldManifestEntryCount, StringComparer.OrdinalIgnoreCase);
-			var oldByHash = new Dictionary<string, List<ModManifestEntry>>(oldManifestEntryCount, StringComparer.OrdinalIgnoreCase);
+			List<ModManifestEntry> old = oldManifest != null && oldManifest.Count > 0
+				? new List<ModManifestEntry>(oldManifest)
+				: new List<ModManifestEntry>();
 
-			if (oldManifest?.Count > 0)
+			foreach (ModManifestEntry entry in newManifest)
 			{
-				foreach (ModManifestEntry oldEntry in oldManifest)
-				{
-					oldByPath.Add(oldEntry.FilePath, oldEntry);
+				// First, check for an exact match. File path/name, hash, size; everything.
+				ModManifestEntry exact = old.FirstOrDefault(x => Equals(x, entry));
 
-					if (!oldByHash.TryGetValue(oldEntry.Checksum, out List<ModManifestEntry> byHashList))
-					{
-						byHashList = new List<ModManifestEntry>();
-						oldByHash.Add(oldEntry.Checksum, byHashList);
-					}
-
-					byHashList.Add(oldEntry);
-
-					oldSet.Add(oldEntry);
-				}
-			}
-
-			bool RemoveMatchingOldEntry(ModManifestEntry newEntry)
-			{
-				if (!oldSet.Remove(newEntry))
-				{
-					return false;
-				}
-
-				oldByPath.Remove(newEntry.FilePath);
-
-				if (oldByHash.TryGetValue(newEntry.Checksum, out List<ModManifestEntry> byHashList))
-				{
-					byHashList.Remove(newEntry);
-
-					if (byHashList.Count == 0)
-					{
-						oldByHash.Remove(newEntry.Checksum);
-					}
-				}
-
-				return true;
-			}
-
-			foreach (ModManifestEntry newEntry in newManifest)
-			{
-				if (newEntry.FilePath.Equals("config.ini", StringComparison.OrdinalIgnoreCase))
+				if (entry.FilePath == "config.ini")
 				{
 					continue;
 				}
 
-				// First, check for an exact match. File path/name, hash, size; everything.
-				if (RemoveMatchingOldEntry(newEntry))
+				if (exact != null)
 				{
-					result.Add(new ModManifestDiff(ModManifestState.Unchanged, newEntry, null));
+					old.Remove(exact);
+					result.Add(new ModManifestDiff(ModManifestState.Unchanged, entry, null));
 					continue;
 				}
 
 				// There's no exact match, so let's search by checksum.
-				oldByHash.TryGetValue(newEntry.Checksum, out List<ModManifestEntry> checksumMatches);
+				List<ModManifestEntry> checksum = old.Where(x => x.Checksum.Equals(entry.Checksum, StringComparison.InvariantCultureIgnoreCase)).ToList();
 
 				// If we've found matching checksums, we then need to check
 				// the file path to see if it's been moved.
-				if (checksumMatches?.Count > 0)
+				if (checksum.Count > 0)
 				{
-					// This file path comparison is deliberately strict so that we can detect
-					// moves/renames where only the case of the file path changes.
-					// (e.g. something.pvm -> SOMETHING.PVM)
-					bool anyMatchingPaths = checksumMatches.Any(x => x.FilePath == newEntry.FilePath);
+					old.Remove(checksum[0]);
 
-					ModManifestEntry firstChecksumMatch = checksumMatches[0];
-					RemoveMatchingOldEntry(firstChecksumMatch);
-
-					if (!anyMatchingPaths)
+					if (checksum.All(x => x.FilePath != entry.FilePath))
 					{
-						if (oldByPath.TryGetValue(newEntry.FilePath, out ModManifestEntry byPath))
-						{
-							RemoveMatchingOldEntry(byPath);
-						}
-
-						result.Add(new ModManifestDiff(ModManifestState.Moved, newEntry, firstChecksumMatch));
+						old.Remove(old.FirstOrDefault(x => x.FilePath.Equals(entry.FilePath, StringComparison.InvariantCultureIgnoreCase)));
+						result.Add(new ModManifestDiff(ModManifestState.Moved, entry, checksum[0]));
 						continue;
 					}
 				}
 
 				// If we've made it here, there's no matching checksums, so let's search
 				// for matching paths. If a path matches, the file has been modified.
-				if (oldByPath.TryGetValue(newEntry.FilePath, out ModManifestEntry nameMatch))
+				ModManifestEntry nameMatch = old.FirstOrDefault(x => x.FilePath.Equals(entry.FilePath, StringComparison.InvariantCultureIgnoreCase));
+
+				if (nameMatch != null)
 				{
-					RemoveMatchingOldEntry(nameMatch);
-					result.Add(new ModManifestDiff(ModManifestState.Changed, newEntry, nameMatch));
+					old.Remove(nameMatch);
+					result.Add(new ModManifestDiff(ModManifestState.Changed, entry, nameMatch));
 					continue;
 				}
 
 				// In every other case, this file is newly added.
-				result.Add(new ModManifestDiff(ModManifestState.Added, newEntry, null));
+				result.Add(new ModManifestDiff(ModManifestState.Added, entry, null));
 			}
 
 			// All files that are still unique to the old manifest should be marked for removal.
-			if (oldSet.Count > 0)
+			if (old.Count > 0)
 			{
-				result.AddRange(oldSet.Select(x => new ModManifestDiff(ModManifestState.Removed, x, null)));
+				result.AddRange(old.Select(x => new ModManifestDiff(ModManifestState.Removed, x, null)));
 			}
 
 			return result;
@@ -386,7 +338,7 @@ namespace ModManagerCommon
 
 					string hash = GetFileHash(filePath);
 
-					if (!hash.Equals(m.Checksum, StringComparison.OrdinalIgnoreCase))
+					if (!hash.Equals(m.Checksum, StringComparison.InvariantCultureIgnoreCase))
 					{
 						result.Add(new ModManifestDiff(ModManifestState.Changed, m, null));
 						continue;
@@ -632,9 +584,9 @@ namespace ModManagerCommon
 		{
 			unchecked
 			{
-				int hashCode = FilePath?.ToLower().GetHashCode() ?? 0;
+				int hashCode = FilePath?.GetHashCode() ?? 0;
 				hashCode = (hashCode * 397) ^ FileSize.GetHashCode();
-				hashCode = (hashCode * 397) ^ (Checksum?.ToLower().GetHashCode() ?? 0);
+				hashCode = (hashCode * 397) ^ (Checksum?.GetHashCode() ?? 0);
 				return hashCode;
 			}
 		}
