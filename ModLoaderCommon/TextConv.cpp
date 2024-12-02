@@ -109,6 +109,17 @@ char* UTF8toCodepage(const char* utf8, unsigned int codepage)
 	return MBStoMBS(utf8, CP_UTF8, codepage);
 }
 
+/**
+ * Convert a Windows codepage text to UTF-8 text.
+ * @param source source text, null-terminated.
+ * @param codepage source codepage.
+ * @return UTF8 etc. text (allocated via new[]), or nullptr on error.
+ */
+char* CodepagetoUTF8(const char* source, unsigned int codepage)
+{
+	return MBStoMBS(source, codepage, CP_UTF8);
+}
+
 /** C++ wrappers. **/
 
 #include <string>
@@ -208,4 +219,15 @@ string UTF8to1252(const string& utf8)
 string UTF8toCodepage(const string& utf8, unsigned int codepage)
 {
 	return MBStoMBS(utf8, CP_UTF8, codepage);
+}
+
+/**
+ * Convert a Windows codepage text to UTF-8 text.
+ * @param source source text, null-terminated.
+ * @param codepage source codepage.
+ * @return UTF8 etc. text, or nullptr on error.
+ */
+string CodepagetoUTF8(const string& source, unsigned int codepage)
+{
+	return MBStoMBS(source, codepage, CP_UTF8);
 }

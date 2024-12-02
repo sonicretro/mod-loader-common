@@ -57,6 +57,14 @@ char* UTF8to1252(const char* utf8);
  */
 char* UTF8toCodepage(const char* utf8, unsigned int codepage);
 
+/**
+ * Convert a Windows codepage text to UTF-8 text.
+ * @param source source text, null-terminated.
+ * @param codepage source codepage.
+ * @return UTF8 etc. text (allocated via new[]), or nullptr on error.
+ */
+char* CodepagetoUTF8(const char* source, unsigned int codepage);
+
 #ifdef __cplusplus
 }
 
@@ -109,6 +117,14 @@ std::string UTF8to1252(const std::string& utf8);
  * @return Windows-1252 etc. text, or empty string on error.
  */
 std::string UTF8toCodepage(const std::string& utf8, unsigned int codepage);
+
+/**
+ * Convert a Windows codepage text to UTF-8 text.
+ * @param source source text, null-terminated.
+ * @param codepage source codepage.
+ * @return UTF8 etc. text (allocated via new[]), or nullptr on error.
+ */
+std::string CodepagetoUTF8(const std::string& source, unsigned int codepage);
 
 #endif /* __cplusplus */
 
